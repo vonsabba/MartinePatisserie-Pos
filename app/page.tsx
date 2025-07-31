@@ -248,7 +248,7 @@ export default function POS() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-gray-50 p-4 px-10 py-10">
       <div className="max-w-7xl mx-auto">
         {/* Header con logo y fecha */}
         <div className="flex flex-col items-center mb-8">
@@ -395,7 +395,7 @@ export default function POS() {
           {/* Panel de Venta */}
           <Card>
             <CardHeader>
-              <CardTitle>Venta Actual</CardTitle>
+              <CardTitle className="">Venta Actual</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Items del carrito */}
