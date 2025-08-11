@@ -697,7 +697,11 @@ export default function EstadisticasPage() {
                           cy="50%"
                           outerRadius={80}
                           dataKey="ingresos"
-                          label={({ medio, porcentaje }) => `${medio}: ${porcentaje.toFixed(1)}%`}
+                          label={({ mes, ingresos }) => {
+                            const total = analisisTemporal.porMes.reduce((sum, item) => sum + item.ingresos, 0)
+                            const porcentaje = total > 0 ? (ingresos / total) * 100 : 0
+                            return `${mes}: ${porcentaje.toFixed(1)}%`
+                          }}
                         >
                           {analisisTemporal.porMes.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={COLORES_GRAFICO[index % COLORES_GRAFICO.length]} />
