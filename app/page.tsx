@@ -22,7 +22,6 @@ import {
   BarChart3,
   Activity,
   ImageIcon,
-  LogOut,
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -59,15 +58,7 @@ interface ItemVenta {
 }
 
 export default function POS() {
-  const {
-    productos: PRODUCTOS_POR_CATEGORIA,
-    promociones,
-    mediosPago,
-    agregarVenta,
-    usuarioActual,
-    logout,
-  } = useAppContext()
-  const isAdmin = usuarioActual?.rol === "administrador"
+  const { productos: PRODUCTOS_POR_CATEGORIA, promociones, mediosPago, agregarVenta } = useAppContext()
   const [categoriaActual, setCategoriaActual] = useState<string | null>(null)
   const [carrito, setCarrito] = useState<ItemVenta[]>([])
   const [medioPago, setMedioPago] = useState("")
@@ -211,7 +202,6 @@ export default function POS() {
       total,
       medioPago,
       nombreMedioPago: obtenerNombreMedioPago(medioPago),
-      usuario: usuarioActual?.nombre || "Sin usuario", // Agregando usuario que realizó la venta
     }
 
     console.log("Venta procesada:", venta)
@@ -268,49 +258,24 @@ export default function POS() {
             <Image src="/mp-logo.svg" alt="MP Logo" width={200} height={80} className="h-16 w-auto" />
           </div>
           <p className="text-sm text-gray-600 capitalize">{formatearFechaHora(fechaHora)}</p>
-
-          <div className="mt-2 flex items-center gap-4 text-sm text-gray-600">
-            <span>
-              Usuario: <strong>{usuarioActual?.nombre}</strong>
-            </span>
-            <span className="text-xs bg-gray-100 px-2 py-1 rounded">
-              {usuarioActual?.rol === "administrador" ? "Administrador" : "Empleado"}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={logout}
-              className="text-red-600 hover:text-red-700 hover:bg-red-50 bg-transparent"
-            >
-              <LogOut className="h-4 w-4 mr-1" />
-              Salir
-            </Button>
-          </div>
-
           <div className="mt-4 flex gap-2">
-            {isAdmin && (
-              <Link href="/admin">
-                <Button variant="outline" size="sm">
-                  Panel de Administración
-                </Button>
-              </Link>
-            )}
-            {isAdmin && (
-              <>
-                <Link href="/ventas">
-                  <Button variant="outline" size="sm">
-                    <BarChart3 className="h-4 w-4 mr-2" />
-                    Ver Ventas
-                  </Button>
-                </Link>
-                <Link href="/estadisticas">
-                  <Button variant="outline" size="sm">
-                    <Activity className="h-4 w-4 mr-2" />
-                    Estadísticas
-                  </Button>
-                </Link>
-              </>
-            )}
+            <Link href="/admin">
+              <Button variant="outline" size="sm">
+                Panel de Administración
+              </Button>
+            </Link>
+            <Link href="/ventas">
+              <Button variant="outline" size="sm">
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Ver Ventas
+              </Button>
+            </Link>
+            <Link href="/estadisticas">
+              <Button variant="outline" size="sm">
+                <Activity className="h-4 w-4 mr-2" />
+                Estadísticas
+              </Button>
+            </Link>
           </div>
         </div>
 

@@ -40,8 +40,6 @@ import {
   FileSpreadsheet,
   FileText,
   Activity,
-  User,
-  LogOut,
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -62,15 +60,13 @@ interface Venta {
   total: number
   medioPago: string
   nombreMedioPago: string
-  usuario: string // Agregando campo usuario a la interfaz
 }
 
 export default function VentasPage() {
-  const { ventas, editarVenta, eliminarVenta, mediosPago, usuarioActual, isAdmin, logout } = useAppContext()
+  const { ventas, editarVenta, eliminarVenta, mediosPago } = useAppContext()
   const [busqueda, setBusqueda] = useState("")
   const [filtroMedioPago, setFiltroMedioPago] = useState("all")
   const [filtroFecha, setFiltroFecha] = useState("all")
-  const [filtroUsuario, setFiltroUsuario] = useState("all") // Agregando filtro por usuario
   const [vistaActual, setVistaActual] = useState<"todas" | "hoy" | "mes">("todas")
   const [ventaEditando, setVentaEditando] = useState<Venta | null>(null)
   const [modalEditar, setModalEditar] = useState(false)
@@ -94,11 +90,7 @@ export default function VentasPage() {
     return [...new Set(medios)].sort()
   }, [ventas])
 
-  const usuariosUnicos = useMemo(() => {
-    const usuarios = ventas.map((venta) => venta.usuario || "Sin usuario").filter(Boolean)
-    return [...new Set(usuarios)].sort()
-  }, [ventas])
-
+  // Filtrar ventas
   const ventasFiltradas = useMemo(() => {
     let ventasFiltradasTemp = [...ventas]
 
@@ -139,12 +131,8 @@ export default function VentasPage() {
       })
     }
 
-    if (filtroUsuario !== "all") {
-      ventasFiltradasTemp = ventasFiltradasTemp.filter((venta) => (venta.usuario || "Sin usuario") === filtroUsuario)
-    }
-
     return ventasFiltradasTemp
-  }, [ventas, busqueda, filtroMedioPago, filtroFecha, filtroUsuario, vistaActual])
+  }, [ventas, busqueda, filtroMedioPago, filtroFecha, vistaActual])
 
   // Agrupar ventas por fecha
   const ventasAgrupadasPorFecha = useMemo(() => {
@@ -230,7 +218,6 @@ export default function VentasPage() {
     setBusqueda("")
     setFiltroMedioPago("all")
     setFiltroFecha("all")
-    setFiltroUsuario("all") // Limpiar filtro de usuario
     setVistaActual("todas")
   }
 
@@ -457,22 +444,6 @@ export default function VentasPage() {
     }
   }
 
-  if (!isAdmin) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="w-full max-w-md text-center">
-          <CardContent className="pt-6">
-            <h2 className="text-xl font-bold text-red-600 mb-2">Acceso Denegado</h2>
-            <p className="text-gray-600 mb-4">No tienes permisos para acceder a esta página.</p>
-            <Link href="/">
-              <Button>Volver al POS</Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-7xl mx-auto">
@@ -480,12 +451,7 @@ export default function VentasPage() {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <Image src="/mp-logo.svg" alt="MP Logo" width={150} height={60} className="h-12 w-auto" />
-            <div>
-              <h1 className="text-2xl font-bold">Registro de Ventas</h1>
-              <p className="text-sm text-gray-600">
-                Usuario: <strong>{usuarioActual?.nombre}</strong>
-              </p>
-            </div>
+            <h1 className="text-2xl font-bold">Registro de Ventas</h1>
           </div>
           <div className="flex gap-2">
             <DropdownMenu>
@@ -518,14 +484,6 @@ export default function VentasPage() {
                 Volver al POS
               </Button>
             </Link>
-            <Button
-              variant="outline"
-              onClick={logout}
-              className="text-red-600 hover:text-red-700 hover:bg-red-50 bg-transparent"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Salir
-            </Button>
           </div>
         </div>
 
@@ -610,11 +568,8 @@ export default function VentasPage() {
               setFiltroMedioPago={setFiltroMedioPago}
               filtroFecha={filtroFecha}
               setFiltroFecha={setFiltroFecha}
-              filtroUsuario={filtroUsuario}
-              setFiltroUsuario={setFiltroUsuario}
               fechasUnicas={fechasUnicas}
               mediosPagoUnicos={mediosPagoUnicos}
-              usuariosUnicos={usuariosUnicos}
               limpiarFiltros={limpiarFiltros}
               formatearFecha={formatearFecha}
               formatearHora={formatearHora}
@@ -632,11 +587,8 @@ export default function VentasPage() {
               setFiltroMedioPago={setFiltroMedioPago}
               filtroFecha={filtroFecha}
               setFiltroFecha={setFiltroFecha}
-              filtroUsuario={filtroUsuario}
-              setFiltroUsuario={setFiltroUsuario}
               fechasUnicas={fechasUnicas}
               mediosPagoUnicos={mediosPagoUnicos}
-              usuariosUnicos={usuariosUnicos}
               limpiarFiltros={limpiarFiltros}
               formatearFecha={formatearFecha}
               formatearHora={formatearHora}
@@ -654,11 +606,8 @@ export default function VentasPage() {
               setFiltroMedioPago={setFiltroMedioPago}
               filtroFecha={filtroFecha}
               setFiltroFecha={setFiltroFecha}
-              filtroUsuario={filtroUsuario}
-              setFiltroUsuario={setFiltroUsuario}
               fechasUnicas={fechasUnicas}
               mediosPagoUnicos={mediosPagoUnicos}
-              usuariosUnicos={usuariosUnicos}
               limpiarFiltros={limpiarFiltros}
               formatearFecha={formatearFecha}
               formatearHora={formatearHora}
@@ -729,11 +678,8 @@ function VentasContent({
   setFiltroMedioPago,
   filtroFecha,
   setFiltroFecha,
-  filtroUsuario,
-  setFiltroUsuario,
   fechasUnicas,
   mediosPagoUnicos,
-  usuariosUnicos,
   limpiarFiltros,
   formatearFecha,
   formatearHora,
@@ -747,18 +693,15 @@ function VentasContent({
   setFiltroMedioPago: (value: string) => void
   filtroFecha: string
   setFiltroFecha: (value: string) => void
-  filtroUsuario: string
-  setFiltroUsuario: (value: string) => void
   fechasUnicas: string[]
   mediosPagoUnicos: string[]
-  usuariosUnicos: string[]
   limpiarFiltros: () => void
   formatearFecha: (fecha: string) => string
   formatearHora: (fecha: string) => string
   onEditarVenta: (venta: Venta) => void
   onEliminarVenta: (ventaId: string) => void
 }) {
-  const hayFiltrosActivos = busqueda || filtroMedioPago !== "all" || filtroFecha !== "all" || filtroUsuario !== "all"
+  const hayFiltrosActivos = busqueda || filtroMedioPago !== "all" || filtroFecha !== "all"
 
   return (
     <>
@@ -779,7 +722,7 @@ function VentasContent({
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <Label htmlFor="busqueda">Buscar por producto</Label>
               <div className="relative">
@@ -827,23 +770,6 @@ function VentasContent({
                 </SelectContent>
               </Select>
             </div>
-
-            <div>
-              <Label htmlFor="usuario">Filtrar por usuario</Label>
-              <Select value={filtroUsuario} onValueChange={setFiltroUsuario}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todos los usuarios" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los usuarios</SelectItem>
-                  {usuariosUnicos.map((usuario) => (
-                    <SelectItem key={usuario} value={usuario}>
-                      {usuario}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
           </div>
         </CardContent>
       </Card>
@@ -882,13 +808,9 @@ function VentasContent({
                             <p className="text-sm text-gray-600">
                               Venta #{venta.id.split("-").pop()} - {formatearHora(venta.fecha)}
                             </p>
-                            <div className="flex gap-2 mt-1">
-                              <Badge variant="outline">{venta.nombreMedioPago}</Badge>
-                              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                                <User className="h-3 w-3 mr-1" />
-                                {venta.usuario || "Sin usuario"}
-                              </Badge>
-                            </div>
+                            <Badge variant="outline" className="mt-1">
+                              {venta.nombreMedioPago}
+                            </Badge>
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="text-right">
