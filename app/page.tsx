@@ -21,6 +21,7 @@ import {
   Layers,
   BarChart3,
   Activity,
+  ImageIcon,
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -48,6 +49,7 @@ interface Producto {
   id: number
   nombre: string
   precio: number
+  imagen?: string
 }
 
 interface ItemVenta {
@@ -382,8 +384,27 @@ export default function POS() {
                         className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
                         onClick={() => agregarProducto(producto)}
                       >
-                        <h3 className="font-medium text-sm">{producto.nombre}</h3>
-                        <p className="text-lg font-bold text-green-600">${producto.precio.toLocaleString()}</p>
+                        <div className="flex items-center gap-3">
+                          {producto.imagen ? (
+                            <div className="w-12 h-12 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
+                              <Image
+                                src={producto.imagen || "/placeholder.svg"}
+                                alt={producto.nombre}
+                                width={48}
+                                height={48}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-12 h-12 rounded-md bg-gray-100 flex items-center justify-center flex-shrink-0">
+                              <ImageIcon className="h-6 w-6 text-gray-400" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-medium text-sm truncate">{producto.nombre}</h3>
+                            <p className="text-lg font-bold text-green-600">${producto.precio.toLocaleString()}</p>
+                          </div>
+                        </div>
                       </div>
                     ),
                   )}

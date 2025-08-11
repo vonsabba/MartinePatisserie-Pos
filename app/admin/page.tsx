@@ -34,6 +34,7 @@ import {
   GripVertical,
   Power,
   PowerOff,
+  ImageIcon,
 } from "lucide-react"
 
 // Importar el nuevo modal
@@ -45,6 +46,7 @@ interface Producto {
   id: number
   nombre: string
   precio: number
+  imagen?: string
 }
 
 interface MedioPago {
@@ -97,6 +99,7 @@ export default function AdminPanel() {
     nombre: "",
     precio: "",
     categoria: "",
+    imagen: "",
   })
   const [formMedioPago, setFormMedioPago] = useState({
     id: "",
@@ -139,10 +142,11 @@ export default function AdminPanel() {
         nombre: producto.nombre,
         precio: producto.precio.toString(),
         categoria,
+        imagen: producto.imagen || "",
       })
     } else {
       setProductoEditando(null)
-      setFormProducto({ nombre: "", precio: "", categoria: "" })
+      setFormProducto({ nombre: "", precio: "", categoria: "", imagen: "" })
     }
     setModalProducto(true)
   }
@@ -154,6 +158,7 @@ export default function AdminPanel() {
       id: productoEditando?.id || Date.now(),
       nombre: formProducto.nombre,
       precio: Number.parseFloat(formProducto.precio),
+      imagen: formProducto.imagen || undefined,
     }
 
     setProductos((prev) => {
@@ -177,8 +182,20 @@ export default function AdminPanel() {
     })
 
     setModalProducto(false)
-    setFormProducto({ nombre: "", precio: "", categoria: "" })
+    setFormProducto({ nombre: "", precio: "", categoria: "", imagen: "" })
     setProductoEditando(null)
+  }
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        const result = event.target?.result as string
+        setFormProducto((prev) => ({ ...prev, imagen: result }))
+      }
+      reader.readAsDataURL(file)
+    }
   }
 
   const eliminarProducto = (id: number) => {
@@ -648,27 +665,59 @@ export default function AdminPanel() {
                             : "No hay productos en esta categoría"}
                         </p>
                       ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                          {categoria.productos.map((producto) => (
-                            <div key={producto.id} className="p-3 border rounded-lg bg-white">
-                              <div className="flex justify-between items-start mb-2">
-                                <h4 className="font-medium text-sm">{producto.nombre}</h4>
-                                <div className="flex gap-1">
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => abrirModalProducto(producto, categoriaKey)}
-                                  >
-                                    <Edit className="h-3 w-3" />
-                                  </Button>
-                                  <Button size="sm" variant="ghost" onClick={() => eliminarProducto(producto.id)}>
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
+                          {filtrarProductos()[categoriaKey as keyof typeof filtrarProductos].productos.map(
+                            (producto) => (
+                              <div
+                                key={producto.id}
+                                className="p-3 border rounded-lg hover:bg-gray-50 transition-colors"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-3 mb-2">
+                                      {producto.imagen ? (
+                                        <div className="w-10 h-10 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
+                                          <Image
+                                            src={producto.imagen || "/placeholder.svg"}
+                                            alt={producto.nombre}
+                                            width={40}
+                                            height={40}
+                                            className="w-full h-full object-cover"
+                                          />
+                                        </div>
+                                      ) : (
+                                        <div className="w-10 h-10 rounded-md bg-gray-100 flex items-center justify-center flex-shrink-0">
+                                          <ImageIcon className="h-5 w-5 text-gray-400" />
+                                        </div>
+                                      )}
+                                      <div className="flex-1 min-w-0">
+                                        <h3 className="font-medium text-sm truncate">{producto.nombre}</h3>
+                                        <p className="text-lg font-bold text-green-600">
+                                          ${producto.precio.toLocaleString()}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex gap-1">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => abrirModalProducto(producto, categoriaKey)}
+                                    >
+                                      <Edit className="h-3 w-3" />
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="destructive"
+                                      onClick={() => eliminarProducto(producto.id)}
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  </div>
                                 </div>
                               </div>
-                              <p className="text-lg font-bold text-green-600">${producto.precio.toLocaleString()}</p>
-                            </div>
-                          ))}
+                            ),
+                          )}
                         </div>
                       )}
                     </div>
@@ -997,13 +1046,50 @@ export default function AdminPanel() {
                   </SelectContent>
                 </Select>
               </div>
+              <div>
+                <Label htmlFor="imagen-producto">Imagen del producto</Label>
+                <div className="space-y-2">
+                  <Input
+                    id="imagen-producto"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="cursor-pointer"
+                  />
+                  {formProducto.imagen && (
+                    <div className="flex items-center gap-3 p-2 border rounded-lg bg-gray-50">
+                      <div className="w-16 h-16 rounded-md overflow-hidden bg-white">
+                        <Image
+                          src={formProducto.imagen || "/placeholder.svg"}
+                          alt="Preview"
+                          width={64}
+                          height={64}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-600">Imagen seleccionada</p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setFormProducto((prev) => ({ ...prev, imagen: "" }))}
+                          className="mt-1"
+                        >
+                          <X className="h-3 w-3 mr-1" />
+                          Quitar
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
               <div className="flex gap-2">
                 <Button onClick={guardarProducto} className="flex-1">
                   <Save className="h-4 w-4 mr-2" />
-                  Guardar
+                  {productoEditando ? "Actualizar" : "Crear"}
                 </Button>
                 <Button variant="outline" onClick={() => setModalProducto(false)}>
-                  <X className="h-4 w-4 mr-2" />
                   Cancelar
                 </Button>
               </div>
