@@ -68,6 +68,23 @@ interface Venta {
   total: number
   medioPago: string
   nombreMedioPago: string
+  usuario: string // Nombre del usuario que realizó la venta
+}
+
+interface Usuario {
+  id: string
+  nombre: string
+  username: string
+  password: string
+  rol: "administrador" | "empleado"
+  activo: boolean
+}
+
+interface UsuarioLogueado {
+  id: string
+  nombre: string
+  username: string
+  rol: "administrador" | "empleado"
 }
 
 interface AppContextType {
@@ -83,6 +100,13 @@ interface AppContextType {
   agregarVenta: (venta: Omit<Venta, "id">) => void
   editarVenta: (id: string, ventaEditada: Omit<Venta, "id">) => void
   eliminarVenta: (id: string) => void
+  usuarios: Usuario[]
+  setUsuarios: (usuarios: Usuario[]) => void
+  usuarioActual: UsuarioLogueado | null
+  login: (username: string, password: string) => boolean
+  logout: () => void
+  isAuthenticated: boolean
+  isAdmin: boolean
 }
 
 // Datos iniciales
@@ -227,6 +251,25 @@ const DESCUENTOS_INICIALES: Descuento[] = [
   { id: 20, nombre: "20% OFF", porcentaje: 20 },
 ]
 
+const USUARIOS_INICIALES: Usuario[] = [
+  {
+    id: "admin-1",
+    nombre: "Administrador",
+    username: "admin",
+    password: "admin123",
+    rol: "administrador",
+    activo: true,
+  },
+  {
+    id: "emp-1",
+    nombre: "Empleado Demo",
+    username: "empleado",
+    password: "emp123",
+    rol: "empleado",
+    activo: true,
+  },
+]
+
 const AppContext = createContext<AppContextType | undefined>(undefined)
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
@@ -235,6 +278,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [mediosPago, setMediosPago] = useState<MedioPago[]>(MEDIOS_PAGO_INICIALES)
   const [descuentos, setDescuentos] = useState<Descuento[]>(DESCUENTOS_INICIALES)
   const [ventas, setVentas] = useState<Venta[]>([])
+  const [usuarios, setUsuarios] = useState<Usuario[]>(USUARIOS_INICIALES)
+  const [usuarioActual, setUsuarioActual] = useState<UsuarioLogueado | null>(null)
 
   // Persistir en localStorage
   useEffect(() => {
@@ -247,8 +292,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (parsed.mediosPago) setMediosPago(parsed.mediosPago)
         if (parsed.descuentos) setDescuentos(parsed.descuentos)
         if (parsed.ventas) setVentas(parsed.ventas)
+        if (parsed.usuarios) setUsuarios(parsed.usuarios)
       } catch (error) {
         console.error("Error loading saved data:", error)
+      }
+    }
+
+    const savedSession = localStorage.getItem("pasteleria-session")
+    if (savedSession) {
+      try {
+        const session = JSON.parse(savedSession)
+        setUsuarioActual(session)
+      } catch (error) {
+        console.error("Error loading session:", error)
+        localStorage.removeItem("pasteleria-session")
       }
     }
   }, [])
@@ -260,9 +317,32 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       mediosPago,
       descuentos,
       ventas,
+      usuarios, // Guardar usuarios
     }
     localStorage.setItem("pasteleria-data", JSON.stringify(dataToSave))
-  }, [productos, promociones, mediosPago, descuentos, ventas])
+  }, [productos, promociones, mediosPago, descuentos, ventas, usuarios])
+
+  const login = (username: string, password: string): boolean => {
+    const usuario = usuarios.find((u) => u.username === username && u.password === password && u.activo)
+
+    if (usuario) {
+      const usuarioLogueado: UsuarioLogueado = {
+        id: usuario.id,
+        nombre: usuario.nombre,
+        username: usuario.username,
+        rol: usuario.rol,
+      }
+      setUsuarioActual(usuarioLogueado)
+      localStorage.setItem("pasteleria-session", JSON.stringify(usuarioLogueado))
+      return true
+    }
+    return false
+  }
+
+  const logout = () => {
+    setUsuarioActual(null)
+    localStorage.removeItem("pasteleria-session")
+  }
 
   const agregarVenta = (nuevaVenta: Omit<Venta, "id">) => {
     const venta: Venta = {
@@ -295,6 +375,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         agregarVenta,
         editarVenta,
         eliminarVenta,
+        usuarios,
+        setUsuarios,
+        usuarioActual,
+        login,
+        logout,
+        isAuthenticated: usuarioActual !== null,
+        isAdmin: usuarioActual?.rol === "administrador",
       }}
     >
       {children}
