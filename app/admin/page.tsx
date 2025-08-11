@@ -72,64 +72,50 @@ interface Promocion {
   configuracion?: any // Configuración específica según el tipo
 }
 
-export default function AdminPanel() {
+export default function AdminPage() {
   const {
     productos,
     setProductos,
     promociones,
     setPromociones,
-    mediosPago: mediosPagoContext,
-    setMediosPago,
-    descuentos: descuentosContext,
+    mediosPago, // usando mediosPago del contexto
+    setMediosPago, // usando setMediosPago del contexto
+    descuentos,
     setDescuentos,
   } = useAppContext()
 
-  const [mediosPago, setMediosPagoLocal] = useState(mediosPagoContext)
-  const [descuentos, setDescuentosLocal] = useState(descuentosContext)
+  // Estados para UI
+  const [tabActiva, setTabActiva] = useState("productos")
   const [modalProducto, setModalProducto] = useState(false)
+  const [modalPromocion, setModalPromocion] = useState(false)
   const [modalMedioPago, setModalMedioPago] = useState(false)
   const [modalDescuento, setModalDescuento] = useState(false)
-  const [modalPromocion, setModalPromocion] = useState(false)
-  const [productoEditando, setProductoEditando] = useState<Producto | null>(null)
+
+  // Estados para formularios
+  const [formProducto, setFormProducto] = useState({ id: "", nombre: "", precio: "", categoria: "", imagen: "" })
+  const [formMedioPago, setFormMedioPago] = useState({ id: "", nombre: "", recargo: "" })
+  const [formDescuento, setFormDescuento] = useState({ id: "", nombre: "", porcentaje: "" })
+
+  // Estados para edición
+  const [productoEditando, setProductoEditando] = useState<any>(null)
   const [medioPagoEditando, setMedioPagoEditando] = useState<MedioPago | null>(null)
   const [descuentoEditando, setDescuentoEditando] = useState<Descuento | null>(null)
-  const [promocionEditando, setPromocionEditando] = useState<Promocion | null>(null)
-  const [nuevaCategoria, setNuevaCategoria] = useState("")
-  const [formProducto, setFormProducto] = useState({
-    nombre: "",
-    precio: "",
-    categoria: "",
-    imagen: "",
-  })
-  const [formMedioPago, setFormMedioPago] = useState({
-    id: "",
-    nombre: "",
-    recargo: "",
-  })
-  const [formDescuento, setFormDescuento] = useState({
-    nombre: "",
-    porcentaje: "",
-  })
-  const [formPromocion, setFormPromocion] = useState({
-    nombre: "",
-    descripcion: "",
-    activa: true,
-    fechaInicio: "",
-    fechaFin: "",
-    tipo: "",
-    configuracion: {},
-  })
+
+  // Estados para búsqueda y filtros
+  const [busquedaProductos, setBusquedaProductos] = useState("")
+  const [busquedaMedios, setBusquedaMedios] = useState("")
+  const [busquedaDescuentos, setBusquedaDescuentos] = useState("")
+  const [categoriaFiltro, setCategoriaFiltro] = useState("todas")
+  const [ordenProductos, setOrdenProductos] = useState<"asc" | "desc">("asc")
+  const [ordenMedios, setOrdenMedios] = useState<"asc" | "desc">("asc")
+  const [ordenDescuentos, setOrdenDescuentos] = useState<"asc" | "desc">("asc")
+
+  // const [mediosPago, setMediosPago] = useState<MedioPago[]>([])
 
   const [modalCategoria, setModalCategoria] = useState(false)
   const [categoriaEditando, setCategoriaEditando] = useState<{ key: string; nombre: string } | null>(null)
   const [formCategoria, setFormCategoria] = useState({ key: "", nombre: "" })
-  const [busquedaProductos, setBusquedaProductos] = useState("")
-  const [busquedaMedios, setBusquedaMedios] = useState("")
-  const [busquedaDescuentos, setBusquedaDescuentos] = useState("")
   const [busquedaPromociones, setBusquedaPromociones] = useState("")
-  const [ordenProductos, setOrdenProductos] = useState<"asc" | "desc">("asc")
-  const [ordenMedios, setOrdenMedios] = useState<"asc" | "desc">("asc")
-  const [ordenDescuentos, setOrdenDescuentos] = useState<"asc" | "desc">("asc")
   const [ordenPromociones, setOrdenPromociones] = useState<"asc" | "desc">("asc")
   const [categoriasVisibles, setCategoriasVisibles] = useState<string[]>(Object.keys(productos))
   const [draggedCategory, setDraggedCategory] = useState<string | null>(null)
@@ -143,10 +129,11 @@ export default function AdminPanel() {
         precio: producto.precio.toString(),
         categoria,
         imagen: producto.imagen || "",
+        id: producto.id.toString(),
       })
     } else {
       setProductoEditando(null)
-      setFormProducto({ nombre: "", precio: "", categoria: "", imagen: "" })
+      setFormProducto({ nombre: "", precio: "", categoria: "", imagen: "", id: "" })
     }
     setModalProducto(true)
   }
@@ -182,7 +169,7 @@ export default function AdminPanel() {
     })
 
     setModalProducto(false)
-    setFormProducto({ nombre: "", precio: "", categoria: "", imagen: "" })
+    setFormProducto({ nombre: "", precio: "", categoria: "", imagen: "", id: "" })
     setProductoEditando(null)
   }
 
@@ -258,10 +245,11 @@ export default function AdminPanel() {
       setFormDescuento({
         nombre: descuento.nombre,
         porcentaje: descuento.porcentaje.toString(),
+        id: descuento.id.toString(),
       })
     } else {
       setDescuentoEditando(null)
-      setFormDescuento({ nombre: "", porcentaje: "" })
+      setFormDescuento({ nombre: "", porcentaje: "", id: "" })
     }
     setModalDescuento(true)
   }
@@ -283,7 +271,7 @@ export default function AdminPanel() {
     })
 
     setModalDescuento(false)
-    setFormDescuento({ nombre: "", porcentaje: "" })
+    setFormDescuento({ nombre: "", porcentaje: "", id: "" })
     setDescuentoEditando(null)
   }
 
@@ -463,70 +451,70 @@ export default function AdminPanel() {
   // Funciones para promociones
   const abrirModalPromocion = (promocion?: Promocion) => {
     if (promocion) {
-      setPromocionEditando(promocion)
-      setFormPromocion({
-        nombre: promocion.nombre,
-        descripcion: promocion.descripcion,
-        activa: promocion.activa,
-        fechaInicio: promocion.fechaInicio,
-        fechaFin: promocion.fechaFin,
-        tipo: promocion.tipo,
-        configuracion: promocion.configuracion || {},
-      })
+      // setPromocionEditando(promocion)
+      // setFormPromocion({
+      //   nombre: promocion.nombre,
+      //   descripcion: promocion.descripcion,
+      //   activa: promocion.activa,
+      //   fechaInicio: promocion.fechaInicio,
+      //   fechaFin: promocion.fechaFin,
+      //   tipo: promocion.tipo,
+      //   configuracion: promocion.configuracion || {},
+      // })
     } else {
-      setPromocionEditando(null)
-      setFormPromocion({
-        nombre: "",
-        descripcion: "",
-        activa: true,
-        fechaInicio: "",
-        fechaFin: "",
-        tipo: "",
-        configuracion: {},
-      })
+      // setPromocionEditando(null)
+      // setFormPromocion({
+      //   nombre: "",
+      //   descripcion: "",
+      //   activa: true,
+      //   fechaInicio: "",
+      //   fechaFin: "",
+      //   tipo: "",
+      //   configuracion: {},
+      // })
     }
     setModalPromocion(true)
   }
 
   const guardarPromocion = () => {
-    if (
-      !formPromocion.nombre ||
-      !formPromocion.descripcion ||
-      !formPromocion.fechaInicio ||
-      !formPromocion.fechaFin ||
-      !formPromocion.tipo
-    )
-      return
+    // if (
+    //   !formPromocion.nombre ||
+    //   !formPromocion.descripcion ||
+    //   !formPromocion.fechaInicio ||
+    //   !formPromocion.fechaFin ||
+    //   !formPromocion.tipo
+    // )
+    //   return
 
-    const nuevaPromocion: Promocion = {
-      id: promocionEditando?.id || Date.now(),
-      nombre: formPromocion.nombre,
-      descripcion: formPromocion.descripcion,
-      activa: formPromocion.activa,
-      fechaInicio: formPromocion.fechaInicio,
-      fechaFin: formPromocion.fechaFin,
-      tipo: formPromocion.tipo,
-      configuracion: formPromocion.configuracion,
-    }
+    // const nuevaPromocion: Promocion = {
+    //   id: promocionEditando?.id || Date.now(),
+    //   nombre: formPromocion.nombre,
+    //   descripcion: formPromocion.descripcion,
+    //   activa: formPromocion.activa,
+    //   fechaInicio: formPromocion.fechaInicio,
+    //   fechaFin: formPromocion.fechaFin,
+    //   tipo: formPromocion.tipo,
+    //   configuracion: formPromocion.configuracion,
+    // }
 
-    setPromociones((prev) => {
-      if (promocionEditando) {
-        return prev.map((p) => (p.id === promocionEditando.id ? nuevaPromocion : p))
-      }
-      return [...prev, nuevaPromocion]
-    })
+    // setPromociones((prev) => {
+    //   if (promocionEditando) {
+    //     return prev.map((p) => (p.id === promocionEditando.id ? nuevaPromocion : p))
+    //   }
+    //   return [...prev, nuevaPromocion]
+    // })
 
     setModalPromocion(false)
-    setFormPromocion({
-      nombre: "",
-      descripcion: "",
-      activa: true,
-      fechaInicio: "",
-      fechaFin: "",
-      tipo: "",
-      configuracion: {},
-    })
-    setPromocionEditando(null)
+    // setFormPromocion({
+    //   nombre: "",
+    //   descripcion: "",
+    //   activa: true,
+    //   fechaInicio: "",
+    //   fechaFin: "",
+    //   tipo: "",
+    //   configuracion: {},
+    // })
+    // setPromocionEditando(null)
   }
 
   const eliminarPromocion = (id: number) => {
@@ -1264,16 +1252,9 @@ export default function AdminPanel() {
         <ModalPromocionAvanzado
           open={modalPromocion}
           onOpenChange={setModalPromocion}
-          promocion={promocionEditando}
+          promocion={null}
           onGuardar={(nuevaPromocion) => {
-            if (promocionEditando) {
-              setPromociones((prev) =>
-                prev.map((p) => (p.id === promocionEditando.id ? { ...nuevaPromocion, id: promocionEditando.id } : p)),
-              )
-            } else {
-              setPromociones((prev) => [...prev, { ...nuevaPromocion, id: Date.now() }])
-            }
-            setPromocionEditando(null)
+            setPromociones((prev) => [...prev, { ...nuevaPromocion, id: Date.now() }])
           }}
           productos={productos}
         />

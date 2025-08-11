@@ -86,11 +86,5 @@
   }
   body {
     @apply bg-background text-foreground;
-    /* Agregando fondo de mármol global */
-    background-image: url("/bg-marmol.webp");
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    background-repeat: no-repeat;
   }
 }
