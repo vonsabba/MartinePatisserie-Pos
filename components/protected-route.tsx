@@ -13,9 +13,9 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
-  const { isAuthenticated, currentUser } = useAppContext()
+  const { isAuthenticated, usuarioActual } = useAppContext()
 
-  if (!isAuthenticated || !currentUser) {
+  if (!isAuthenticated || !usuarioActual) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Card className="w-full max-w-md text-center">
@@ -31,7 +31,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     )
   }
 
-  if (requiredRole === "administrador" && currentUser.rol !== "administrador") {
+  if (requiredRole === "administrador" && usuarioActual.rol !== "administrador") {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Card className="w-full max-w-md text-center">
