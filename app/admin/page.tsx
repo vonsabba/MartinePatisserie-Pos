@@ -14,7 +14,6 @@ import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Trash2, Edit, Plus, Eye, EyeOff, User, Shield } from "lucide-react"
-import { ProtectedRoute } from "@/components/protected-route"
 
 interface Producto {
   id: number
@@ -55,7 +54,7 @@ interface Usuario {
   activo: boolean
 }
 
-function AdminContent() {
+export default function AdminPage() {
   const {
     productos,
     setProductos,
@@ -67,6 +66,8 @@ function AdminContent() {
     setDescuentos,
     usuarios,
     setUsuarios,
+    usuarioActual,
+    isAdmin,
   } = useAppContext()
 
   // Estados para productos
@@ -103,6 +104,21 @@ function AdminContent() {
   })
   const [editandoUsuario, setEditandoUsuario] = useState<string | null>(null)
   const [mostrarPassword, setMostrarPassword] = useState<{ [key: string]: boolean }>({})
+
+  if (!usuarioActual || !isAdmin) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <h2 className="text-xl font-semibold mb-2">Acceso Denegado</h2>
+              <p className="text-muted-foreground">Solo los administradores pueden acceder a esta página.</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   // Funciones para productos
   const agregarProducto = () => {
@@ -1004,13 +1020,5 @@ function AdminContent() {
         </TabsContent>
       </Tabs>
     </div>
-  )
-}
-
-export default function AdminPage() {
-  return (
-    <ProtectedRoute requiredRole="administrador">
-      <AdminContent />
-    </ProtectedRoute>
   )
 }
