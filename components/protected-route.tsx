@@ -9,13 +9,13 @@ import Link from "next/link"
 
 interface ProtectedRouteProps {
   children: React.ReactNode
-  requireAdmin?: boolean
+  requiredRole?: "administrador" | "empleado"
 }
 
-export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
-  const { isAuthenticated, isAdmin } = useAppContext()
+export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
+  const { isAuthenticated, currentUser } = useAppContext()
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !currentUser) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Card className="w-full max-w-md text-center">
@@ -31,7 +31,7 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
     )
   }
 
-  if (requireAdmin && !isAdmin) {
+  if (requiredRole === "administrador" && currentUser.rol !== "administrador") {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Card className="w-full max-w-md text-center">
