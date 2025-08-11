@@ -85,16 +85,16 @@ export default function AdminPage() {
     if (nuevoProducto.nombre && nuevoProducto.precio > 0 && nuevoProducto.categoria) {
       const nuevosProductos = { ...productos }
       if (!nuevosProductos[nuevoProducto.categoria]) {
-        nuevosProductos[nuevoProducto.categoria] = []
+        nuevosProductos[nuevoProducto.categoria] = { nombre: nuevoProducto.categoria, productos: [] }
       }
       const nuevoId =
         Math.max(
           ...Object.values(productos)
-            .flat()
+            .flatMap((cat) => cat.productos)
             .map((p) => p.id),
           0,
         ) + 1
-      nuevosProductos[nuevoProducto.categoria].push({
+      nuevosProductos[nuevoProducto.categoria].productos.push({
         id: nuevoId,
         nombre: nuevoProducto.nombre,
         precio: nuevoProducto.precio,
@@ -107,12 +107,12 @@ export default function AdminPage() {
 
   const eliminarProducto = (categoria: string, id: number) => {
     const nuevosProductos = { ...productos }
-    nuevosProductos[categoria] = nuevosProductos[categoria].filter((p) => p.id !== id)
+    nuevosProductos[categoria].productos = nuevosProductos[categoria].productos.filter((p) => p.id !== id)
     setProductos(nuevosProductos)
   }
 
   const editarProducto = (categoria: string, id: number) => {
-    const producto = productos[categoria].find((p) => p.id === id)
+    const producto = productos[categoria].productos.find((p) => p.id === id)
     if (producto) {
       setNuevoProducto({
         nombre: producto.nombre,
@@ -127,9 +127,9 @@ export default function AdminPage() {
   const guardarEdicionProducto = () => {
     if (editandoProducto && nuevoProducto.nombre && nuevoProducto.precio > 0) {
       const nuevosProductos = { ...productos }
-      const index = nuevosProductos[editandoProducto.categoria].findIndex((p) => p.id === editandoProducto.id)
+      const index = nuevosProductos[editandoProducto.categoria].productos.findIndex((p) => p.id === editandoProducto.id)
       if (index !== -1) {
-        nuevosProductos[editandoProducto.categoria][index] = {
+        nuevosProductos[editandoProducto.categoria].productos[index] = {
           id: editandoProducto.id,
           nombre: nuevoProducto.nombre,
           precio: nuevoProducto.precio,
@@ -311,13 +311,17 @@ export default function AdminPage() {
     }
   }
 
-  const categorias = Object.keys(productos)
   const productosFiltrados = Object.entries(productos).reduce(
-    (acc, [categoria, prods]) => {
+    (acc, [categoria, categoriaData]) => {
       if (categoriaSeleccionada === "todas" || categoriaSeleccionada === categoria) {
-        const prodsFiltrados = prods.filter((p) => p.nombre.toLowerCase().includes(busquedaProducto.toLowerCase()))
+        const prodsFiltrados = categoriaData.productos.filter((p) =>
+          p.nombre.toLowerCase().includes(busquedaProducto.toLowerCase()),
+        )
         if (prodsFiltrados.length > 0) {
-          acc[categoria] = prodsFiltrados
+          acc[categoria] = {
+            ...categoriaData,
+            productos: prodsFiltrados,
+          }
         }
       }
       return acc
@@ -325,7 +329,10 @@ export default function AdminPage() {
     {} as typeof productos,
   )
 
-  const totalProductos = Object.values(productosFiltrados).flat().length
+  const totalProductos = Object.values(productosFiltrados).reduce(
+    (total, categoriaData) => total + categoriaData.productos.length,
+    0,
+  )
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
@@ -393,7 +400,7 @@ export default function AdminPage() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="todas">Categorías (4/4)</SelectItem>
-                        {categorias.map((cat) => (
+                        {Object.keys(productos).map((cat) => (
                           <SelectItem key={cat} value={cat}>
                             {cat}
                           </SelectItem>
@@ -405,13 +412,13 @@ export default function AdminPage() {
               </div>
 
               <div className="p-6">
-                {Object.entries(productosFiltrados).map(([categoria, prods]) => (
+                {Object.entries(productosFiltrados).map(([categoria, categoriaData]) => (
                   <div key={categoria} className="mb-8">
                     <h3 className="text-lg font-medium text-blue-600 mb-4">
-                      {categoria} ({prods.length} productos)
+                      {categoriaData.nombre} ({categoriaData.productos.length} productos)
                     </h3>
                     <div className="grid grid-cols-3 gap-4">
-                      {prods.map((producto) => (
+                      {categoriaData.productos.map((producto) => (
                         <div key={producto.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
                           <div className="flex items-center justify-between mb-2">
                             <h4 className="font-medium">{producto.nombre}</h4>
