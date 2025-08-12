@@ -22,6 +22,7 @@ import {
   BarChart3,
   Activity,
   Package,
+  Users,
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -272,6 +273,12 @@ export default function POS() {
               <Button variant="outline" size="sm">
                 <Activity className="h-4 w-4 mr-2" />
                 Estadísticas
+              </Button>
+            </Link>
+            <Link href="/accesos">
+              <Button variant="outline" size="sm">
+                <Users className="h-4 w-4 mr-2" />
+                Accesos
               </Button>
             </Link>
           </div>
