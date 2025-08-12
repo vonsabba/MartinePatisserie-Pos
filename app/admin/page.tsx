@@ -12,8 +12,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Edit, Trash2, Search, ArrowUpDown, X, ArrowLeft, Users } from "lucide-react"
+import { Plus, Edit, Trash2, Search, ArrowUpDown, X, ArrowLeft, Users, Power } from "lucide-react"
 import Link from "next/link"
+import ModalPromocionAvanzado from "@/components/modal-promocion-avanzado"
 
 export default function AdminPage() {
   const {
@@ -81,6 +82,8 @@ export default function AdminPage() {
     tipo: "",
     activa: true,
   })
+
+  const [modalPromocionAvanzadoAbierto, setModalPromocionAvanzadoAbierto] = useState(false)
 
   // Estados para usuarios
   const [busquedaUsuarios, setBusquedaUsuarios] = useState("")
@@ -398,26 +401,28 @@ export default function AdminPage() {
   const abrirModalPromocion = (promocion?: any) => {
     if (promocion) {
       setPromocionEditando(promocion)
-      setFormPromocion({
-        nombre: promocion.nombre,
-        descripcion: promocion.descripcion,
-        fechaInicio: promocion.fechaInicio,
-        fechaFin: promocion.fechaFin,
-        tipo: promocion.tipo,
-        activa: promocion.activa,
-      })
     } else {
       setPromocionEditando(null)
-      setFormPromocion({
-        nombre: "",
-        descripcion: "",
-        fechaInicio: "",
-        fechaFin: "",
-        tipo: "",
-        activa: true,
-      })
     }
-    setModalPromocionAbierto(true)
+    setModalPromocionAvanzadoAbierto(true)
+  }
+
+  const guardarPromocionAvanzada = (promocionData: any) => {
+    if (promocionEditando) {
+      // Editar promoción existente
+      const promocionesActualizadas = promociones.map((promocion) =>
+        promocion.id === promocionEditando.id ? { ...promocion, ...promocionData } : promocion,
+      )
+      setPromociones(promocionesActualizadas)
+    } else {
+      // Crear nueva promoción
+      const nuevaPromocion = {
+        id: Date.now(),
+        ...promocionData,
+      }
+      setPromociones([...promociones, nuevaPromocion])
+    }
+    setPromocionEditando(null)
   }
 
   const guardarPromocion = () => {
@@ -555,7 +560,6 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <Link href="/">
@@ -564,14 +568,16 @@ export default function AdminPage() {
                 Volver al POS
               </Button>
             </Link>
-            <div>
-              <h1 className="text-3xl font-bold text-amber-600">Martine Pâtisserie</h1>
-              <p className="text-gray-600">Panel de Administración</p>
+            <div className="flex items-center gap-3">
+              <img src="/mp-logo.svg" alt="MP Logo" className="h-12 w-12" />
+              <div>
+                <h1 className="text-3xl font-bold text-amber-600">Martine Pâtisserie</h1>
+                <p className="text-gray-600">Panel de Administración</p>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Tabs Content - Agregando todas las pestañas faltantes */}
         <Tabs defaultValue="productos" className="space-y-6">
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="productos">Productos</TabsTrigger>
@@ -865,7 +871,7 @@ export default function AdminPage() {
                                   <Edit className="h-3 w-3" />
                                 </Button>
                                 <Button size="sm" variant="ghost" onClick={() => togglePromocion(promocion.id)}>
-                                  <X className="h-3 w-3" />
+                                  <Power className="h-3 w-3" />
                                 </Button>
                                 <Button size="sm" variant="ghost" onClick={() => eliminarPromocion(promocion.id)}>
                                   <Trash2 className="h-3 w-3" />
@@ -904,7 +910,7 @@ export default function AdminPage() {
                                   <Edit className="h-3 w-3" />
                                 </Button>
                                 <Button size="sm" variant="ghost" onClick={() => togglePromocion(promocion.id)}>
-                                  <Plus className="h-3 w-3" />
+                                  <Power className="h-3 w-3" />
                                 </Button>
                                 <Button size="sm" variant="ghost" onClick={() => eliminarPromocion(promocion.id)}>
                                   <Trash2 className="h-3 w-3" />
@@ -1149,74 +1155,13 @@ export default function AdminPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Modal para promociones */}
-        <Dialog open={modalPromocionAbierto} onOpenChange={setModalPromocionAbierto}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{promocionEditando ? "Editar Promoción" : "Nueva Promoción"}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="nombre-promocion">Nombre de la Promoción</Label>
-                <Input
-                  id="nombre-promocion"
-                  value={formPromocion.nombre}
-                  onChange={(e) => setFormPromocion((prev) => ({ ...prev, nombre: e.target.value }))}
-                  placeholder="Ingrese el nombre de la promoción"
-                />
-              </div>
-              <div>
-                <Label htmlFor="descripcion-promocion">Descripción</Label>
-                <Input
-                  id="descripcion-promocion"
-                  value={formPromocion.descripcion}
-                  onChange={(e) => setFormPromocion((prev) => ({ ...prev, descripcion: e.target.value }))}
-                  placeholder="Ingrese la descripción de la promoción"
-                />
-              </div>
-              <div>
-                <Label htmlFor="fecha-inicio">Fecha de Inicio</Label>
-                <Input
-                  id="fecha-inicio"
-                  type="date"
-                  value={formPromocion.fechaInicio}
-                  onChange={(e) => setFormPromocion((prev) => ({ ...prev, fechaInicio: e.target.value }))}
-                />
-              </div>
-              <div>
-                <Label htmlFor="fecha-fin">Fecha de Fin</Label>
-                <Input
-                  id="fecha-fin"
-                  type="date"
-                  value={formPromocion.fechaFin}
-                  onChange={(e) => setFormPromocion((prev) => ({ ...prev, fechaFin: e.target.value }))}
-                />
-              </div>
-              <div>
-                <Label htmlFor="tipo-promocion">Tipo de Promoción</Label>
-                <Select
-                  value={formPromocion.tipo}
-                  onValueChange={(value) => setFormPromocion((prev) => ({ ...prev, tipo: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccione el tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="2x1">2x1</SelectItem>
-                    <SelectItem value="descuento-cantidad">Descuento por Cantidad</SelectItem>
-                    <SelectItem value="combo">Combo</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setModalPromocionAbierto(false)}>
-                  Cancelar
-                </Button>
-                <Button onClick={guardarPromocion}>{promocionEditando ? "Actualizar" : "Crear"}</Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <ModalPromocionAvanzado
+          open={modalPromocionAvanzadoAbierto}
+          onOpenChange={setModalPromocionAvanzadoAbierto}
+          promocion={promocionEditando}
+          onGuardar={guardarPromocionAvanzada}
+          productos={productos}
+        />
 
         {/* Modal para usuarios ya existente */}
         <Dialog open={modalUsuarioAbierto} onOpenChange={setModalUsuarioAbierto}>
