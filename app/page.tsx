@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -21,42 +21,16 @@ import {
   Layers,
   BarChart3,
   Activity,
+  Package,
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { usePromociones } from "@/hooks/use-promociones"
 import { useAppContext } from "@/contexts/app-context"
-
-const MEDIOS_PAGO = [
-  { id: "efectivo", nombre: "Efectivo" },
-  { id: "tarjeta", nombre: "Tarjeta" },
-  { id: "transferencia", nombre: "Transferencia" },
-]
-
-const CONFIGURACION_RECARGOS = {
-  efectivo: { recargo: 0, nombre: "Efectivo" },
-  tarjeta: { recargo: 1.24, nombre: "Tarjeta" },
-  transferencia: { recargo: 1.24, nombre: "Transferencia" },
-}
-
-const DESCUENTOS_DISPONIBLES = [
-  { id: 10, nombre: "10% OFF", porcentaje: 0.1 },
-  { id: 20, nombre: "20% OFF", porcentaje: 0.2 },
-]
-
-interface Producto {
-  id: number
-  nombre: string
-  precio: number
-}
-
-interface ItemVenta {
-  producto: Producto
-  cantidad: number
-}
+import type { ItemVenta, Producto } from "@/types" // Import or declare the variables here
 
 export default function POS() {
-  const { productos: PRODUCTOS_POR_CATEGORIA, promociones, mediosPago, agregarVenta } = useAppContext()
+  const { productos: PRODUCTOS_POR_CATEGORIA, promociones, mediosPago, agregarVenta, descuentos } = useAppContext()
   const [categoriaActual, setCategoriaActual] = useState<string | null>(null)
   const [carrito, setCarrito] = useState<ItemVenta[]>([])
   const [medioPago, setMedioPago] = useState("")
@@ -64,6 +38,7 @@ export default function POS() {
   const [ventaConcretada, setVentaConcretada] = useState(false)
   const [modalManual, setModalManual] = useState(false)
   const [productoManual, setProductoManual] = useState({ nombre: "", precio: "" })
+  const [busquedaProducto, setBusquedaProducto] = useState("")
   const [fechaHora, setFechaHora] = useState(new Date())
   const [ultimaVenta, setUltimaVenta] = useState<{
     total: number
@@ -131,7 +106,7 @@ export default function POS() {
   }
 
   const aplicarDescuento = (porcentaje: number) => {
-    setDescuentoAplicado(porcentaje)
+    setDescuentoAplicado(porcentaje / 100)
   }
 
   const quitarDescuento = () => {
@@ -158,18 +133,31 @@ export default function POS() {
   const calcularTotal = () => {
     const subtotalConDescuento = calcularSubtotalConDescuento()
 
-    if (!medioPago || medioPago === "efectivo") {
+    if (!medioPago) {
       return subtotalConDescuento
     }
 
-    // Aplicar recargo y redondear hacia arriba en centenas
-    const totalConRecargo =
-      subtotalConDescuento * CONFIGURACION_RECARGOS[medioPago as keyof typeof CONFIGURACION_RECARGOS].recargo
-    return Math.ceil(totalConRecargo / 100) * 100
+    const medioSeleccionado = mediosPago.find((m) => m.id === medioPago)
+    if (!medioSeleccionado || medioSeleccionado.recargo === 0) {
+      return subtotalConDescuento
+    }
+
+    const porcentajeRecargo = medioSeleccionado.recargo / 100
+    const totalConRecargo = subtotalConDescuento * (1 + porcentajeRecargo)
+
+    if (porcentajeRecargo > 0) {
+      return Math.ceil(totalConRecargo / 100) * 100
+    }
+
+    return Math.round(totalConRecargo)
   }
 
   const obtenerRecargo = () => {
-    if (!medioPago || medioPago === "efectivo") return 0
+    if (!medioPago) return 0
+
+    const medioSeleccionado = mediosPago.find((m) => m.id === medioPago)
+    if (!medioSeleccionado || medioSeleccionado.recargo === 0) return 0
+
     const subtotalConDescuento = calcularSubtotalConDescuento()
     return calcularTotal() - subtotalConDescuento
   }
@@ -182,7 +170,6 @@ export default function POS() {
   const procesarVenta = () => {
     if (carrito.length === 0 || !medioPago) return
 
-    // CALCULAR TODOS LOS VALORES ANTES DE LIMPIAR EL ESTADO
     const subtotal = calcularSubtotal()
     const descuentoManual = calcularDescuentoManual()
     const recargo = obtenerRecargo()
@@ -204,10 +191,8 @@ export default function POS() {
 
     console.log("Venta procesada:", venta)
 
-    // Registrar la venta en el contexto
     agregarVenta(venta)
 
-    // GUARDAR LOS DATOS PARA EL MENSAJE
     setUltimaVenta({
       total,
       subtotal,
@@ -234,6 +219,7 @@ export default function POS() {
     setDescuentoAplicado(0)
     setVentaConcretada(false)
     setCategoriaActual(null)
+    setBusquedaProducto("") // Limpiar búsqueda al iniciar nueva venta
   }
 
   const formatearFechaHora = (fecha: Date) => {
@@ -247,8 +233,22 @@ export default function POS() {
     })
   }
 
+  const productosEncontrados = useMemo(() => {
+    if (!busquedaProducto.trim()) return []
+
+    const productos: Producto[] = []
+    Object.values(PRODUCTOS_POR_CATEGORIA).forEach((categoria) => {
+      categoria.productos.forEach((producto) => {
+        if (producto.nombre.toLowerCase().includes(busquedaProducto.toLowerCase())) {
+          productos.push(producto)
+        }
+      })
+    })
+    return productos.slice(0, 8) // Limitar a 8 resultados
+  }, [busquedaProducto, PRODUCTOS_POR_CATEGORIA])
+
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-gray-50 p-4 px-10 py-10">
       <div className="max-w-7xl mx-auto">
         {/* Header con logo y fecha */}
         <div className="flex flex-col items-center mb-8">
@@ -312,54 +312,105 @@ export default function POS() {
                   : "Categorías"}
               </CardTitle>
               <div className="flex gap-2">
+                <div className="flex items-center gap-2">
+                  <Input
+                    placeholder="Buscar producto..."
+                    value={busquedaProducto}
+                    onChange={(e) => setBusquedaProducto(e.target.value)}
+                    className="w-48"
+                  />
+                  <Dialog open={modalManual} onOpenChange={setModalManual}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <DollarSign className="h-4 w-4 mr-2" />
+                        Manual
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Agregar Producto Manual</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="nombre-manual">Nombre del producto</Label>
+                          <Input
+                            id="nombre-manual"
+                            value={productoManual.nombre}
+                            onChange={(e) => setProductoManual((prev) => ({ ...prev, nombre: e.target.value }))}
+                            placeholder="Ej: Producto especial"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="precio-manual">Precio</Label>
+                          <Input
+                            id="precio-manual"
+                            type="number"
+                            value={productoManual.precio}
+                            onChange={(e) => setProductoManual((prev) => ({ ...prev, precio: e.target.value }))}
+                            placeholder="0"
+                          />
+                        </div>
+                        <Button onClick={agregarProductoManual} className="w-full">
+                          Agregar al Carrito
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
                 {categoriaActual && (
                   <Button variant="outline" size="sm" onClick={volverACategorias}>
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Volver
                   </Button>
                 )}
-                <Dialog open={modalManual} onOpenChange={setModalManual}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <DollarSign className="h-4 w-4 mr-2" />
-                      Manual
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Agregar Producto Manual</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="nombre-manual">Nombre del producto</Label>
-                        <Input
-                          id="nombre-manual"
-                          value={productoManual.nombre}
-                          onChange={(e) => setProductoManual((prev) => ({ ...prev, nombre: e.target.value }))}
-                          placeholder="Ej: Producto especial"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="precio-manual">Precio</Label>
-                        <Input
-                          id="precio-manual"
-                          type="number"
-                          value={productoManual.precio}
-                          onChange={(e) => setProductoManual((prev) => ({ ...prev, precio: e.target.value }))}
-                          placeholder="0"
-                        />
-                      </div>
-                      <Button onClick={agregarProductoManual} className="w-full">
-                        Agregar al Carrito
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
               </div>
             </CardHeader>
             <CardContent>
-              {!categoriaActual ? (
-                // Vista de categorías
+              {busquedaProducto.trim() ? (
+                <div className="space-y-4">
+                  <h4 className="text-sm font-medium text-gray-600">
+                    Resultados de búsqueda ({productosEncontrados.length})
+                  </h4>
+                  {productosEncontrados.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
+                      {productosEncontrados.map((producto) => (
+                        <div
+                          key={producto.id}
+                          className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                          onClick={() => {
+                            agregarProducto(producto)
+                            setBusquedaProducto("") // Limpiar búsqueda después de agregar
+                          }}
+                        >
+                          <div className="flex items-center gap-3">
+                            {producto.imagen ? (
+                              <div className="w-12 h-12 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
+                                <Image
+                                  src={producto.imagen || "/placeholder.svg"}
+                                  alt={producto.nombre}
+                                  width={48}
+                                  height={48}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            ) : (
+                              <div className="w-12 h-12 rounded-md bg-gray-100 flex items-center justify-center flex-shrink-0">
+                                <Package className="h-6 w-6 text-gray-400" />
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-sm truncate">{producto.nombre}</h4>
+                              <p className="text-green-600 font-semibold">${producto.precio}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 text-center py-8">No se encontraron productos</p>
+                  )}
+                </div>
+              ) : !categoriaActual ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {Object.entries(PRODUCTOS_POR_CATEGORIA).map(([key, categoria]) => (
                     <div
@@ -373,7 +424,6 @@ export default function POS() {
                   ))}
                 </div>
               ) : (
-                // Vista de productos de la categoría seleccionada
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
                   {PRODUCTOS_POR_CATEGORIA[categoriaActual as keyof typeof PRODUCTOS_POR_CATEGORIA].productos.map(
                     (producto) => (
@@ -382,8 +432,27 @@ export default function POS() {
                         className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
                         onClick={() => agregarProducto(producto)}
                       >
-                        <h3 className="font-medium text-sm">{producto.nombre}</h3>
-                        <p className="text-lg font-bold text-green-600">${producto.precio.toLocaleString()}</p>
+                        <div className="flex items-center gap-3">
+                          {producto.imagen ? (
+                            <div className="w-12 h-12 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
+                              <Image
+                                src={producto.imagen || "/placeholder.svg"}
+                                alt={producto.nombre}
+                                width={48}
+                                height={48}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-12 h-12 rounded-md bg-gray-100 flex items-center justify-center flex-shrink-0">
+                              <Package className="h-6 w-6 text-gray-400" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-sm truncate">{producto.nombre}</h4>
+                            <p className="text-lg font-bold text-green-600">${producto.precio.toLocaleString()}</p>
+                          </div>
+                        </div>
                       </div>
                     ),
                   )}
@@ -395,7 +464,7 @@ export default function POS() {
           {/* Panel de Venta */}
           <Card>
             <CardHeader>
-              <CardTitle>Venta Actual</CardTitle>
+              <CardTitle className="">Venta Actual</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Items del carrito */}
@@ -514,13 +583,13 @@ export default function POS() {
                     )}
                   </div>
                   <div className="flex gap-2">
-                    {DESCUENTOS_DISPONIBLES.map((descuento) => (
+                    {descuentos.map((descuento) => (
                       <Button
                         key={descuento.id}
                         size="sm"
-                        variant={descuentoAplicado === descuento.porcentaje ? "default" : "outline"}
+                        variant={descuentoAplicado === descuento.porcentaje / 100 ? "default" : "outline"}
                         onClick={() => aplicarDescuento(descuento.porcentaje)}
-                        disabled={descuentoAplicado === descuento.porcentaje}
+                        disabled={descuentoAplicado === descuento.porcentaje / 100}
                       >
                         <Percent className="h-3 w-3 mr-1" />
                         {descuento.nombre}
@@ -558,12 +627,16 @@ export default function POS() {
                     </div>
                   )}
 
-                  {obtenerRecargo() > 0 && (
-                    <div className="flex justify-between items-center text-orange-600">
+                  {obtenerRecargo() !== 0 && (
+                    <div
+                      className={`flex justify-between items-center ${obtenerRecargo() > 0 ? "text-orange-600" : "text-green-600"}`}
+                    >
                       <span className="text-sm">
-                        Recargo ({CONFIGURACION_RECARGOS[medioPago as keyof typeof CONFIGURACION_RECARGOS].nombre}):
+                        {obtenerRecargo() > 0 ? "Recargo" : "Descuento"} ({obtenerNombreMedioPago(medioPago)}):
                       </span>
-                      <span className="text-sm">+${obtenerRecargo().toLocaleString()}</span>
+                      <span className="text-sm">
+                        {obtenerRecargo() > 0 ? "+" : ""}${obtenerRecargo().toLocaleString()}
+                      </span>
                     </div>
                   )}
 
@@ -583,9 +656,17 @@ export default function POS() {
                       <SelectValue placeholder="Seleccionar medio de pago" />
                     </SelectTrigger>
                     <SelectContent>
-                      {MEDIOS_PAGO.map((medio) => (
+                      {mediosPago.map((medio) => (
                         <SelectItem key={medio.id} value={medio.id}>
                           {medio.nombre}
+                          {medio.recargo !== 0 && (
+                            <span
+                              className={`ml-2 text-xs ${medio.recargo > 0 ? "text-orange-600" : "text-green-600"}`}
+                            >
+                              ({medio.recargo > 0 ? "+" : ""}
+                              {medio.recargo}%)
+                            </span>
+                          )}
                         </SelectItem>
                       ))}
                     </SelectContent>

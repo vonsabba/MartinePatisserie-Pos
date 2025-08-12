@@ -4,9 +4,11 @@ import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   ArrowLeft,
   TrendingUp,
@@ -22,6 +24,7 @@ import {
   Gift,
   CreditCard,
   Clock,
+  CalendarIcon,
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -34,6 +37,7 @@ import {
   CartesianGrid,
   ResponsiveContainer,
   PieChart as RechartsPieChart,
+  Pie,
   Cell,
   Area,
   AreaChart,
@@ -52,26 +56,50 @@ const COLORES_GRAFICO = [
 ]
 
 export default function EstadisticasPage() {
-  const { ventas, productos } = useAppContext()
-  const [periodoSeleccionado, setPeriodoSeleccionado] = useState<"7d" | "30d" | "90d" | "todo">("30d")
+  const { ventas } = useAppContext()
+  const [periodoSeleccionado, setPeriodoSeleccionado] = useState("30d")
+  const [fechaInicio, setFechaInicio] = useState<Date>()
+  const [fechaFin, setFechaFin] = useState<Date>()
+  const [mesSeleccionado, setMesSeleccionado] = useState("")
 
-  // Filtrar ventas por período
   const ventasFiltradas = useMemo(() => {
-    if (periodoSeleccionado === "todo") return ventas
+    const ahora = new Date()
+    let fechaLimite: Date
 
-    const hoy = new Date()
-    const diasAtras = {
-      "7d": 7,
-      "30d": 30,
-      "90d": 90,
-    }[periodoSeleccionado]
+    if (periodoSeleccionado === "personalizado" && fechaInicio && fechaFin) {
+      return ventas.filter((venta) => {
+        const fechaVenta = new Date(venta.fecha)
+        return fechaVenta >= fechaInicio && fechaVenta <= fechaFin
+      })
+    }
 
-    const fechaLimite = new Date(hoy.getTime() - diasAtras * 24 * 60 * 60 * 1000)
+    if (periodoSeleccionado.startsWith("mes-")) {
+      const [, year, month] = periodoSeleccionado.split("-")
+      return ventas.filter((venta) => {
+        const fechaVenta = new Date(venta.fecha)
+        return (
+          fechaVenta.getFullYear() === Number.parseInt(year) && fechaVenta.getMonth() === Number.parseInt(month) - 1
+        )
+      })
+    }
+
+    switch (periodoSeleccionado) {
+      case "7d":
+        fechaLimite = new Date(ahora.getTime() - 7 * 24 * 60 * 60 * 1000)
+        break
+      case "30d":
+        fechaLimite = new Date(ahora.getTime() - 30 * 24 * 60 * 60 * 1000)
+        break
+      case "90d":
+        fechaLimite = new Date(ahora.getTime() - 90 * 24 * 60 * 60 * 1000)
+        break
+      default:
+        return ventas
+    }
 
     return ventas.filter((venta) => new Date(venta.fecha) >= fechaLimite)
-  }, [ventas, periodoSeleccionado])
+  }, [ventas, periodoSeleccionado, fechaInicio, fechaFin])
 
-  // Métricas generales
   const metricas = useMemo(() => {
     const totalVentas = ventasFiltradas.length
     const totalFacturado = ventasFiltradas.reduce((sum, venta) => sum + venta.total, 0)
@@ -82,7 +110,6 @@ export default function EstadisticasPage() {
     const totalRecargos = ventasFiltradas.reduce((sum, venta) => sum + venta.recargo, 0)
     const promedioVenta = totalVentas > 0 ? totalFacturado / totalVentas : 0
 
-    // Comparar con período anterior
     const diasPeriodo = {
       "7d": 7,
       "30d": 30,
@@ -113,14 +140,12 @@ export default function EstadisticasPage() {
     }
   }, [ventasFiltradas, ventas, periodoSeleccionado])
 
-  // Análisis de productos
   const analisisProductos = useMemo(() => {
     const productosVendidos: {
       [nombre: string]: {
         cantidad: number
         ingresos: number
         ventas: number
-        categoria: string
       }
     } = {}
 
@@ -128,19 +153,10 @@ export default function EstadisticasPage() {
       venta.items.forEach((item) => {
         const nombre = item.producto.nombre
         if (!productosVendidos[nombre]) {
-          // Encontrar categoría del producto
-          let categoria = "Sin categoría"
-          Object.entries(productos).forEach(([catKey, cat]) => {
-            if ((cat as any).productos.some((p: any) => p.id === item.producto.id)) {
-              categoria = (cat as any).nombre
-            }
-          })
-
           productosVendidos[nombre] = {
             cantidad: 0,
             ingresos: 0,
             ventas: 0,
-            categoria,
           }
         }
         productosVendidos[nombre].cantidad += item.cantidad
@@ -158,32 +174,19 @@ export default function EstadisticasPage() {
     return {
       masVendidos: productosArray.sort((a, b) => b.cantidad - a.cantidad).slice(0, 10),
       masRentables: productosArray.sort((a, b) => b.ingresos - a.ingresos).slice(0, 10),
-      porCategoria: productosArray.reduce(
-        (acc, producto) => {
-          if (!acc[producto.categoria]) {
-            acc[producto.categoria] = { cantidad: 0, ingresos: 0 }
-          }
-          acc[producto.categoria].cantidad += producto.cantidad
-          acc[producto.categoria].ingresos += producto.ingresos
-          return acc
-        },
-        {} as { [categoria: string]: { cantidad: number; ingresos: number } },
-      ),
     }
-  }, [ventasFiltradas, productos])
+  }, [ventasFiltradas])
 
-  // Análisis temporal
   const analisisTemporal = useMemo(() => {
     const ventasPorDia: { [fecha: string]: { ventas: number; ingresos: number } } = {}
     const ventasPorHora: { [hora: number]: { ventas: number; ingresos: number } } = {}
     const ventasPorDiaSemana: { [dia: number]: { ventas: number; ingresos: number } } = {}
+    const ventasPorMes: { [mes: string]: { ventas: number; ingresos: number } } = {}
 
-    // Inicializar horas
     for (let i = 0; i < 24; i++) {
       ventasPorHora[i] = { ventas: 0, ingresos: 0 }
     }
 
-    // Inicializar días de la semana
     for (let i = 0; i < 7; i++) {
       ventasPorDiaSemana[i] = { ventas: 0, ingresos: 0 }
     }
@@ -193,24 +196,29 @@ export default function EstadisticasPage() {
       const fechaStr = fecha.toISOString().split("T")[0]
       const hora = fecha.getHours()
       const diaSemana = fecha.getDay()
+      const mesStr = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, "0")}`
 
-      // Por día
       if (!ventasPorDia[fechaStr]) {
         ventasPorDia[fechaStr] = { ventas: 0, ingresos: 0 }
       }
       ventasPorDia[fechaStr].ventas += 1
       ventasPorDia[fechaStr].ingresos += venta.total
 
-      // Por hora
       ventasPorHora[hora].ventas += 1
       ventasPorHora[hora].ingresos += venta.total
 
-      // Por día de la semana
       ventasPorDiaSemana[diaSemana].ventas += 1
       ventasPorDiaSemana[diaSemana].ingresos += venta.total
+
+      if (!ventasPorMes[mesStr]) {
+        ventasPorMes[mesStr] = { ventas: 0, ingresos: 0 }
+      }
+      ventasPorMes[mesStr].ventas += 1
+      ventasPorMes[mesStr].ingresos += venta.total
     })
 
     const diasSemana = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
+    const meses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
 
     return {
       porDia: Object.entries(ventasPorDia)
@@ -230,75 +238,43 @@ export default function EstadisticasPage() {
         diaNum: Number.parseInt(dia),
         ...datos,
       })),
+      porMes: Object.entries(ventasPorMes)
+        .map(([mes, datos]) => {
+          const [year, monthNum] = mes.split("-")
+          return {
+            mes,
+            mesFormateado: `${meses[Number.parseInt(monthNum) - 1]} ${year}`,
+            ...datos,
+          }
+        })
+        .sort((a, b) => a.mes.localeCompare(b.mes)),
     }
   }, [ventasFiltradas])
 
-  // Análisis de promociones
-  const analisisPromociones = useMemo(() => {
-    const promocionesUsadas: {
-      [nombre: string]: {
-        usos: number
-        descuentoTotal: number
-        ventasAfectadas: number
-      }
-    } = {}
-
-    ventasFiltradas.forEach((venta) => {
-      if (venta.promocionesAplicadas.length > 0) {
-        venta.promocionesAplicadas.forEach((promocion) => {
-          if (!promocionesUsadas[promocion]) {
-            promocionesUsadas[promocion] = {
-              usos: 0,
-              descuentoTotal: 0,
-              ventasAfectadas: 0,
-            }
-          }
-          promocionesUsadas[promocion].usos += 1
-          promocionesUsadas[promocion].descuentoTotal += venta.descuentoPromociones
-          promocionesUsadas[promocion].ventasAfectadas += 1
-        })
-      }
-    })
-
-    return Object.entries(promocionesUsadas)
-      .map(([nombre, datos]) => ({
-        nombre,
-        ...datos,
-        promedioDescuento: datos.descuentoTotal / datos.usos,
-      }))
-      .sort((a, b) => b.descuentoTotal - a.descuentoTotal)
-  }, [ventasFiltradas])
-
-  // Análisis de medios de pago
-  const analisisMediosPago = useMemo(() => {
-    const mediosPago: {
-      [medio: string]: {
-        ventas: number
-        ingresos: number
-        recargos: number
-      }
-    } = {}
-
-    ventasFiltradas.forEach((venta) => {
-      const medio = venta.nombreMedioPago
-      if (!mediosPago[medio]) {
-        mediosPago[medio] = { ventas: 0, ingresos: 0, recargos: 0 }
-      }
-      mediosPago[medio].ventas += 1
-      mediosPago[medio].ingresos += venta.total
-      mediosPago[medio].recargos += venta.recargo
-    })
-
-    return Object.entries(mediosPago)
-      .map(([medio, datos]) => ({
-        medio,
-        ...datos,
-        porcentaje: (datos.ventas / ventasFiltradas.length) * 100,
-      }))
-      .sort((a, b) => b.ventas - a.ventas)
-  }, [ventasFiltradas])
-
   const formatearPeriodo = (periodo: string) => {
+    if (periodo === "personalizado" && fechaInicio && fechaFin) {
+      return `${fechaInicio.toLocaleDateString("es-AR")} - ${fechaFin.toLocaleDateString("es-AR")}`
+    }
+
+    if (periodo.startsWith("mes-")) {
+      const [, year, month] = periodo.split("-")
+      const meses = [
+        "Enero",
+        "Febrero",
+        "Marzo",
+        "Abril",
+        "Mayo",
+        "Junio",
+        "Julio",
+        "Agosto",
+        "Septiembre",
+        "Octubre",
+        "Noviembre",
+        "Diciembre",
+      ]
+      return `${meses[Number.parseInt(month) - 1]} ${year}`
+    }
+
     const nombres = {
       "7d": "Últimos 7 días",
       "30d": "Últimos 30 días",
@@ -308,10 +284,42 @@ export default function EstadisticasPage() {
     return nombres[periodo as keyof typeof nombres]
   }
 
+  const obtenerMesesDisponibles = () => {
+    const mesesSet = new Set<string>()
+    ventas.forEach((venta) => {
+      const fecha = new Date(venta.fecha)
+      const mesKey = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, "0")}`
+      mesesSet.add(mesKey)
+    })
+
+    const meses = [
+      "Enero",
+      "Febrero",
+      "Marzo",
+      "Abril",
+      "Mayo",
+      "Junio",
+      "Julio",
+      "Agosto",
+      "Septiembre",
+      "Octubre",
+      "Noviembre",
+      "Diciembre",
+    ]
+    return Array.from(mesesSet)
+      .sort()
+      .map((mesKey) => {
+        const [year, month] = mesKey.split("-")
+        return {
+          value: `mes-${mesKey}`,
+          label: `${meses[Number.parseInt(month) - 1]} ${year}`,
+        }
+      })
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <Image src="/mp-logo.svg" alt="MP Logo" width={150} height={60} className="h-12 w-auto" />
@@ -330,8 +338,46 @@ export default function EstadisticasPage() {
                 <SelectItem value="30d">Últimos 30 días</SelectItem>
                 <SelectItem value="90d">Últimos 90 días</SelectItem>
                 <SelectItem value="todo">Todo el tiempo</SelectItem>
+                {obtenerMesesDisponibles().map((mes) => (
+                  <SelectItem key={mes.value} value={mes.value}>
+                    {mes.label}
+                  </SelectItem>
+                ))}
+                <SelectItem value="personalizado">Rango personalizado</SelectItem>
               </SelectContent>
             </Select>
+
+            {periodoSeleccionado === "personalizado" && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-48 bg-transparent">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    Seleccionar fechas
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Fecha inicio</Label>
+                      <Input
+                        type="date"
+                        value={fechaInicio?.toISOString().split("T")[0] || ""}
+                        onChange={(e) => setFechaInicio(new Date(e.target.value))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Fecha fin</Label>
+                      <Input
+                        type="date"
+                        value={fechaFin?.toISOString().split("T")[0] || ""}
+                        onChange={(e) => setFechaFin(new Date(e.target.value))}
+                      />
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            )}
+
             <Link href="/">
               <Button variant="outline">
                 <ArrowLeft className="h-4 w-4 mr-2" />
@@ -341,7 +387,6 @@ export default function EstadisticasPage() {
           </div>
         </div>
 
-        {/* Métricas principales */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardContent className="p-6">
@@ -423,7 +468,6 @@ export default function EstadisticasPage() {
             <TabsTrigger value="categorias">Categorías</TabsTrigger>
           </TabsList>
 
-          {/* Tab Productos */}
           <TabsContent value="productos" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
@@ -446,7 +490,6 @@ export default function EstadisticasPage() {
                           </div>
                           <div>
                             <p className="font-medium">{producto.nombre}</p>
-                            <p className="text-sm text-gray-500">{producto.categoria}</p>
                           </div>
                         </div>
                         <div className="text-right">
@@ -494,7 +537,6 @@ export default function EstadisticasPage() {
             </div>
           </TabsContent>
 
-          {/* Tab Temporal */}
           <TabsContent value="temporal" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
@@ -563,6 +605,36 @@ export default function EstadisticasPage() {
                 </CardContent>
               </Card>
 
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5" />
+                    Ventas por Mes
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ChartContainer
+                    config={{
+                      ingresos: {
+                        label: "Ingresos",
+                        color: "hsl(var(--chart-3))",
+                      },
+                    }}
+                    className="h-[300px]"
+                  >
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={analisisTemporal.porMes}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="mesFormateado" />
+                        <YAxis />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Bar dataKey="ingresos" fill="var(--color-ingresos)" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                </CardContent>
+              </Card>
+
               <Card className="lg:col-span-2">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -586,7 +658,6 @@ export default function EstadisticasPage() {
             </div>
           </TabsContent>
 
-          {/* Tab Promociones */}
           <TabsContent value="promociones" className="space-y-6">
             <Card>
               <CardHeader>
@@ -595,55 +666,10 @@ export default function EstadisticasPage() {
                   Rendimiento de Promociones
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                {analisisPromociones.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Gift className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">No se han aplicado promociones en este período</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {analisisPromociones.map((promocion, index) => (
-                      <div key={promocion.nombre} className="p-4 border rounded-lg">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-3">
-                            <Badge variant="secondary" className="bg-green-100 text-green-800">
-                              #{index + 1}
-                            </Badge>
-                            <h3 className="font-semibold">{promocion.nombre}</h3>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-lg font-bold text-green-600">
-                              ${promocion.descuentoTotal.toLocaleString()}
-                            </p>
-                            <p className="text-sm text-gray-500">descuento total</p>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-3 gap-4 text-center">
-                          <div>
-                            <p className="text-2xl font-bold text-blue-600">{promocion.usos}</p>
-                            <p className="text-sm text-gray-500">veces usada</p>
-                          </div>
-                          <div>
-                            <p className="text-2xl font-bold text-purple-600">{promocion.ventasAfectadas}</p>
-                            <p className="text-sm text-gray-500">ventas afectadas</p>
-                          </div>
-                          <div>
-                            <p className="text-2xl font-bold text-orange-600">
-                              ${promocion.promedioDescuento.toLocaleString()}
-                            </p>
-                            <p className="text-sm text-gray-500">descuento promedio</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
+              <CardContent>{/* Placeholder for promociones analysis */}</CardContent>
             </Card>
           </TabsContent>
 
-          {/* Tab Medios de Pago */}
           <TabsContent value="pagos" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
@@ -665,12 +691,23 @@ export default function EstadisticasPage() {
                   >
                     <ResponsiveContainer width="100%" height="100%">
                       <RechartsPieChart>
-                        <Tooltip />
-                        <RechartsPieChart data={analisisMediosPago} cx="50%" cy="50%" outerRadius={80} dataKey="ventas">
-                          {analisisMediosPago.map((entry, index) => (
+                        <Pie
+                          data={analisisTemporal.porMes}
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={80}
+                          dataKey="ingresos"
+                          label={({ mes, ingresos }) => {
+                            const total = analisisTemporal.porMes.reduce((sum, item) => sum + item.ingresos, 0)
+                            const porcentaje = total > 0 ? (ingresos / total) * 100 : 0
+                            return `${mes}: ${porcentaje.toFixed(1)}%`
+                          }}
+                        >
+                          {analisisTemporal.porMes.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={COLORES_GRAFICO[index % COLORES_GRAFICO.length]} />
                           ))}
-                        </RechartsPieChart>
+                        </Pie>
+                        <Tooltip />
                       </RechartsPieChart>
                     </ResponsiveContainer>
                   </ChartContainer>
@@ -684,43 +721,11 @@ export default function EstadisticasPage() {
                     Detalles por Medio de Pago
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {analisisMediosPago.map((medio, index) => (
-                      <div key={medio.medio} className="p-4 bg-gray-50 rounded-lg">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-3">
-                            <div
-                              className="w-4 h-4 rounded-full"
-                              style={{ backgroundColor: COLORES_GRAFICO[index % COLORES_GRAFICO.length] }}
-                            />
-                            <h3 className="font-semibold">{medio.medio}</h3>
-                          </div>
-                          <Badge variant="outline">{medio.porcentaje.toFixed(1)}%</Badge>
-                        </div>
-                        <div className="grid grid-cols-3 gap-4 text-center">
-                          <div>
-                            <p className="text-lg font-bold text-blue-600">{medio.ventas}</p>
-                            <p className="text-xs text-gray-500">ventas</p>
-                          </div>
-                          <div>
-                            <p className="text-lg font-bold text-green-600">${medio.ingresos.toLocaleString()}</p>
-                            <p className="text-xs text-gray-500">ingresos</p>
-                          </div>
-                          <div>
-                            <p className="text-lg font-bold text-orange-600">${medio.recargos.toLocaleString()}</p>
-                            <p className="text-xs text-gray-500">recargos</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
+                <CardContent>{/* Placeholder for pagos analysis */}</CardContent>
               </Card>
             </div>
           </TabsContent>
 
-          {/* Tab Categorías */}
           <TabsContent value="categorias" className="space-y-6">
             <Card>
               <CardHeader>
@@ -729,31 +734,7 @@ export default function EstadisticasPage() {
                   Rendimiento por Categoría
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {Object.entries(analisisProductos.porCategoria).map(([categoria, datos]) => (
-                    <div key={categoria} className="p-4 border rounded-lg">
-                      <h3 className="font-semibold text-lg mb-3">{categoria}</h3>
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Unidades vendidas:</span>
-                          <span className="font-bold text-blue-600">{datos.cantidad}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Ingresos totales:</span>
-                          <span className="font-bold text-green-600">${datos.ingresos.toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Promedio por unidad:</span>
-                          <span className="font-bold text-purple-600">
-                            ${Math.round(datos.ingresos / datos.cantidad).toLocaleString()}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
+              <CardContent>{/* Placeholder for categorías analysis */}</CardContent>
             </Card>
           </TabsContent>
         </Tabs>

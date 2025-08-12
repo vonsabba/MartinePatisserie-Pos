@@ -7,6 +7,7 @@ interface Producto {
   id: number
   nombre: string
   precio: number
+  imagen?: string
 }
 
 interface ProductoCombo {
@@ -50,6 +51,13 @@ interface Descuento {
   porcentaje: number
 }
 
+interface Usuario {
+  id: number
+  nombre: string
+  contraseña: string
+  rol: "administrador" | "empleado"
+}
+
 interface ItemVenta {
   producto: Producto
   cantidad: number
@@ -78,6 +86,8 @@ interface AppContextType {
   setMediosPago: (medios: MedioPago[]) => void
   descuentos: Descuento[]
   setDescuentos: (descuentos: Descuento[]) => void
+  usuarios: Usuario[]
+  setUsuarios: (usuarios: Usuario[]) => void
   ventas: Venta[]
   agregarVenta: (venta: Omit<Venta, "id">) => void
   editarVenta: (id: string, ventaEditada: Omit<Venta, "id">) => void
@@ -90,80 +100,80 @@ const PRODUCTOS_INICIALES = {
     nombre: "Secos",
     orden: 1,
     productos: [
-      { id: 1, nombre: "Cookie Pecán", precio: 180 },
-      { id: 2, nombre: "Cookie Avellanas", precio: 180 },
-      { id: 3, nombre: "Cookie Pistacho", precio: 200 },
-      { id: 4, nombre: "Cookie Shot", precio: 160 },
-      { id: 5, nombre: "Scón de Queso", precio: 220 },
-      { id: 6, nombre: "Chipa", precio: 150 },
-      { id: 7, nombre: "Alfajor Manteca", precio: 280 },
-      { id: 8, nombre: "Alfajor Maicena", precio: 280 },
-      { id: 9, nombre: "Alfajor Almendra", precio: 320 },
-      { id: 10, nombre: "Alfajor Pistacho", precio: 350 },
-      { id: 11, nombre: "Alfajor Berrylate", precio: 300 },
-      { id: 12, nombre: "Financier Pistacho", precio: 380 },
-      { id: 13, nombre: "Financier Frutos Rojos", precio: 360 },
+      { id: 1, nombre: "Cookie Pecán", precio: 180, imagen: "cookie-pecan.jpg" },
+      { id: 2, nombre: "Cookie Avellanas", precio: 180, imagen: "cookie-avellanas.jpg" },
+      { id: 3, nombre: "Cookie Pistacho", precio: 200, imagen: "cookie-pistacho.jpg" },
+      { id: 4, nombre: "Cookie Shot", precio: 160, imagen: "cookie-shot.jpg" },
+      { id: 5, nombre: "Scón de Queso", precio: 220, imagen: "scón-de-queso.jpg" },
+      { id: 6, nombre: "Chipa", precio: 150, imagen: "chipa.jpg" },
+      { id: 7, nombre: "Alfajor Manteca", precio: 280, imagen: "alfajor-manteca.jpg" },
+      { id: 8, nombre: "Alfajor Maicena", precio: 280, imagen: "alfajor-maicena.jpg" },
+      { id: 9, nombre: "Alfajor Almendra", precio: 320, imagen: "alfajor-almendra.jpg" },
+      { id: 10, nombre: "Alfajor Pistacho", precio: 350, imagen: "alfajor-pistacho.jpg" },
+      { id: 11, nombre: "Alfajor Berrylate", precio: 300, imagen: "alfajor-berrylate.jpg" },
+      { id: 12, nombre: "Financier Pistacho", precio: 380, imagen: "financier-pistacho.jpg" },
+      { id: 13, nombre: "Financier Frutos Rojos", precio: 360, imagen: "financier-frutos-rojos.jpg" },
     ],
   },
   minicakes: {
     nombre: "Minicakes",
     orden: 2,
     productos: [
-      { id: 14, nombre: "Lemon", precio: 450 },
-      { id: 15, nombre: "Carrot Cake", precio: 480 },
-      { id: 16, nombre: "Cheesecake Pistacho", precio: 520 },
-      { id: 17, nombre: "Cheesecake Chocolate", precio: 500 },
-      { id: 18, nombre: "Cheesecake Frambuesa", precio: 510 },
-      { id: 19, nombre: "Brownie", precio: 420 },
-      { id: 20, nombre: "Lingote Marroc", precio: 480 },
-      { id: 21, nombre: "Lingote Maracuyá", precio: 480 },
-      { id: 22, nombre: "Profiterol Avellana", precio: 460 },
-      { id: 23, nombre: "Profiterol Diplomata", precio: 460 },
-      { id: 24, nombre: "Tiramisu", precio: 490 },
-      { id: 25, nombre: "Rosa", precio: 520 },
-      { id: 26, nombre: "Rocher", precio: 500 },
-      { id: 27, nombre: "Paris Brest", precio: 540 },
-      { id: 28, nombre: "Duo", precio: 480 },
-      { id: 29, nombre: "Pistacho", precio: 550 },
-      { id: 30, nombre: "Avellanas", precio: 480 },
-      { id: 31, nombre: "Pavlova", precio: 460 },
-      { id: 32, nombre: "Ricotta", precio: 440 },
-      { id: 33, nombre: "Concorde", precio: 520 },
-      { id: 34, nombre: "Oreo", precio: 450 },
+      { id: 14, nombre: "Lemon", precio: 450, imagen: "lemon.jpg" },
+      { id: 15, nombre: "Carrot Cake", precio: 480, imagen: "carrot-cake.jpg" },
+      { id: 16, nombre: "Cheesecake Pistacho", precio: 520, imagen: "cheesecake-pistacho.jpg" },
+      { id: 17, nombre: "Cheesecake Chocolate", precio: 500, imagen: "cheesecake-chocolate.jpg" },
+      { id: 18, nombre: "Cheesecake Frambuesa", precio: 510, imagen: "cheesecake-frambuesa.jpg" },
+      { id: 19, nombre: "Brownie", precio: 420, imagen: "brownie.jpg" },
+      { id: 20, nombre: "Lingote Marroc", precio: 480, imagen: "lingote-marroc.jpg" },
+      { id: 21, nombre: "Lingote Maracuyá", precio: 480, imagen: "lingote-maracuя.jpg" },
+      { id: 22, nombre: "Profiterol Avellana", precio: 460, imagen: "profiterol-avellana.jpg" },
+      { id: 23, nombre: "Profiterol Diplomata", precio: 460, imagen: "profiterol-diplomata.jpg" },
+      { id: 24, nombre: "Tiramisu", precio: 490, imagen: "tiramisu.jpg" },
+      { id: 25, nombre: "Rosa", precio: 520, imagen: "rosa.jpg" },
+      { id: 26, nombre: "Rocher", precio: 500, imagen: "rocher.jpg" },
+      { id: 27, nombre: "Paris Brest", precio: 540, imagen: "paris-brest.jpg" },
+      { id: 28, nombre: "Duo", precio: 480, imagen: "duo.jpg" },
+      { id: 29, nombre: "Pistacho", precio: 550, imagen: "pistacho.jpg" },
+      { id: 30, nombre: "Avellanas", precio: 480, imagen: "avellanas.jpg" },
+      { id: 31, nombre: "Pavlova", precio: 460, imagen: "pavlova.jpg" },
+      { id: 32, nombre: "Ricotta", precio: 440, imagen: "ricotta.jpg" },
+      { id: 33, nombre: "Concorde", precio: 520, imagen: "concorde.jpg" },
+      { id: 34, nombre: "Oreo", precio: 450, imagen: "oreo.jpg" },
     ],
   },
   tortas: {
     nombre: "Tortas",
     orden: 3,
     productos: [
-      { id: 35, nombre: "Lemon Pie Grande", precio: 3200 },
-      { id: 36, nombre: "Lemon Pie Chico", precio: 2400 },
-      { id: 37, nombre: "Balcarce Grande", precio: 3500 },
-      { id: 38, nombre: "Balcarce Chico", precio: 2600 },
-      { id: 39, nombre: "Frutilla Grande", precio: 3300 },
-      { id: 40, nombre: "Frutilla Chico", precio: 2500 },
-      { id: 41, nombre: "Brownie Grande", precio: 3100 },
-      { id: 42, nombre: "Brownie Chico", precio: 2300 },
-      { id: 43, nombre: "Tiramisú Grande", precio: 3600 },
-      { id: 44, nombre: "Tiramisú Chico", precio: 2700 },
-      { id: 45, nombre: "Sambayón Grande", precio: 3400 },
-      { id: 46, nombre: "Sambayón Chico", precio: 2550 },
-      { id: 47, nombre: "NY Cheesecake Grande", precio: 3800 },
-      { id: 48, nombre: "NY Cheesecake Chico", precio: 2850 },
-      { id: 49, nombre: "Dúo Grande", precio: 3300 },
-      { id: 50, nombre: "Dúo Chico", precio: 2500 },
-      { id: 51, nombre: "Ricotta Grande", precio: 3000 },
-      { id: 52, nombre: "Ricotta Chico", precio: 2250 },
+      { id: 35, nombre: "Lemon Pie Grande", precio: 3200, imagen: "lemon-pie-grande.jpg" },
+      { id: 36, nombre: "Lemon Pie Chico", precio: 2400, imagen: "lemon-pie-chico.jpg" },
+      { id: 37, nombre: "Balcarce Grande", precio: 3500, imagen: "balcarce-grande.jpg" },
+      { id: 38, nombre: "Balcarce Chico", precio: 2600, imagen: "balcarce-chico.jpg" },
+      { id: 39, nombre: "Frutilla Grande", precio: 3300, imagen: "frutilla-grande.jpg" },
+      { id: 40, nombre: "Frutilla Chico", precio: 2500, imagen: "frutilla-chico.jpg" },
+      { id: 41, nombre: "Brownie Grande", precio: 3100, imagen: "brownie-grande.jpg" },
+      { id: 42, nombre: "Brownie Chico", precio: 2300, imagen: "brownie-chico.jpg" },
+      { id: 43, nombre: "Tiramisú Grande", precio: 3600, imagen: "tiramisú-grande.jpg" },
+      { id: 44, nombre: "Tiramisú Chico", precio: 2700, imagen: "tiramisú-chico.jpg" },
+      { id: 45, nombre: "Sambayón Grande", precio: 3400, imagen: "sambayón-grande.jpg" },
+      { id: 46, nombre: "Sambayón Chico", precio: 2550, imagen: "sambayón-chico.jpg" },
+      { id: 47, nombre: "NY Cheesecake Grande", precio: 3800, imagen: "ny-cheesecake-grande.jpg" },
+      { id: 48, nombre: "NY Cheesecake Chico", precio: 2850, imagen: "ny-cheesecake-chico.jpg" },
+      { id: 49, nombre: "Dúo Grande", precio: 3300, imagen: "dúo-grande.jpg" },
+      { id: 50, nombre: "Dúo Chico", precio: 2500, imagen: "dúo-chico.jpg" },
+      { id: 51, nombre: "Ricotta Grande", precio: 3000, imagen: "ricotta-grande.jpg" },
+      { id: 52, nombre: "Ricotta Chico", precio: 2250, imagen: "ricotta-chico.jpg" },
     ],
   },
   bebidas: {
     nombre: "Bebidas",
     orden: 4,
     productos: [
-      { id: 53, nombre: "Café", precio: 180 },
-      { id: 54, nombre: "Café con Leche", precio: 220 },
-      { id: 55, nombre: "Jugo", precio: 250 },
-      { id: 56, nombre: "Chocolatada", precio: 280 },
+      { id: 53, nombre: "Café", precio: 180, imagen: "café.jpg" },
+      { id: 54, nombre: "Café con Leche", precio: 220, imagen: "café-con-leche.jpg" },
+      { id: 55, nombre: "Jugo", precio: 250, imagen: "jugo.jpg" },
+      { id: 56, nombre: "Chocolatada", precio: 280, imagen: "chocolatada.jpg" },
     ],
   },
 }
@@ -226,6 +236,11 @@ const DESCUENTOS_INICIALES: Descuento[] = [
   { id: 20, nombre: "20% OFF", porcentaje: 20 },
 ]
 
+const USUARIOS_INICIALES: Usuario[] = [
+  { id: 1, nombre: "admin", contraseña: "admin123", rol: "administrador" },
+  { id: 2, nombre: "empleado", contraseña: "emp123", rol: "empleado" },
+]
+
 const AppContext = createContext<AppContextType | undefined>(undefined)
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
@@ -233,6 +248,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [promociones, setPromociones] = useState<Promocion[]>(PROMOCIONES_INICIALES)
   const [mediosPago, setMediosPago] = useState<MedioPago[]>(MEDIOS_PAGO_INICIALES)
   const [descuentos, setDescuentos] = useState<Descuento[]>(DESCUENTOS_INICIALES)
+  const [usuarios, setUsuarios] = useState<Usuario[]>(USUARIOS_INICIALES)
   const [ventas, setVentas] = useState<Venta[]>([])
 
   // Persistir en localStorage
@@ -245,6 +261,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (parsed.promociones) setPromociones(parsed.promociones)
         if (parsed.mediosPago) setMediosPago(parsed.mediosPago)
         if (parsed.descuentos) setDescuentos(parsed.descuentos)
+        if (parsed.usuarios) setUsuarios(parsed.usuarios)
         if (parsed.ventas) setVentas(parsed.ventas)
       } catch (error) {
         console.error("Error loading saved data:", error)
@@ -258,10 +275,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       promociones,
       mediosPago,
       descuentos,
+      usuarios,
       ventas,
     }
     localStorage.setItem("pasteleria-data", JSON.stringify(dataToSave))
-  }, [productos, promociones, mediosPago, descuentos, ventas])
+  }, [productos, promociones, mediosPago, descuentos, usuarios, ventas])
 
   const agregarVenta = (nuevaVenta: Omit<Venta, "id">) => {
     const venta: Venta = {
@@ -290,6 +308,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setMediosPago,
         descuentos,
         setDescuentos,
+        usuarios,
+        setUsuarios,
         ventas,
         agregarVenta,
         editarVenta,
