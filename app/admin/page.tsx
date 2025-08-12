@@ -75,6 +75,7 @@ interface Promocion {
 interface Usuario {
   id: number
   nombre: string
+  contraseña: string
   rol: string
 }
 
@@ -104,7 +105,7 @@ export default function AdminPage() {
   const [formProducto, setFormProducto] = useState({ id: "", nombre: "", precio: "", categoria: "", imagen: "" })
   const [formMedioPago, setFormMedioPago] = useState({ id: "", nombre: "", recargo: "" })
   const [formDescuento, setFormDescuento] = useState({ id: "", nombre: "", porcentaje: "" })
-  const [formUsuario, setFormUsuario] = useState({ id: "", nombre: "", rol: "" })
+  const [formUsuario, setFormUsuario] = useState({ id: "", nombre: "", contraseña: "", rol: "" })
 
   // Estados para edición
   const [productoEditando, setProductoEditando] = useState<any>(null)
@@ -571,21 +572,23 @@ export default function AdminPage() {
       setFormUsuario({
         id: usuario.id.toString(),
         nombre: usuario.nombre,
+        contraseña: usuario.contraseña,
         rol: usuario.rol,
       })
     } else {
       setUsuarioEditando(null)
-      setFormUsuario({ id: "", nombre: "", rol: "" })
+      setFormUsuario({ id: "", nombre: "", contraseña: "", rol: "" })
     }
     setModalUsuario(true)
   }
 
   const guardarUsuario = () => {
-    if (!formUsuario.nombre || !formUsuario.rol) return
+    if (!formUsuario.nombre || !formUsuario.contraseña || !formUsuario.rol) return
 
     const nuevoUsuario: Usuario = {
       id: usuarioEditando?.id || Date.now(),
       nombre: formUsuario.nombre,
+      contraseña: formUsuario.contraseña,
       rol: formUsuario.rol,
     }
 
@@ -597,7 +600,7 @@ export default function AdminPage() {
     })
 
     setModalUsuario(false)
-    setFormUsuario({ id: "", nombre: "", rol: "" })
+    setFormUsuario({ id: "", nombre: "", contraseña: "", rol: "" })
     setUsuarioEditando(null)
   }
 
@@ -1404,6 +1407,16 @@ export default function AdminPage() {
                   value={formUsuario.nombre}
                   onChange={(e) => setFormUsuario((prev) => ({ ...prev, nombre: e.target.value }))}
                   placeholder="Nombre del usuario"
+                />
+              </div>
+              <div>
+                <Label htmlFor="contraseña-usuario">Contraseña</Label>
+                <Input
+                  id="contraseña-usuario"
+                  type="password"
+                  value={formUsuario.contraseña}
+                  onChange={(e) => setFormUsuario((prev) => ({ ...prev, contraseña: e.target.value }))}
+                  placeholder="Contraseña del usuario"
                 />
               </div>
               <div>
