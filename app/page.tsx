@@ -30,7 +30,7 @@ import { useAppContext } from "@/contexts/app-context"
 import type { ItemVenta, Producto } from "@/types" // Import or declare the variables here
 
 export default function POS() {
-  const { productos: PRODUCTOS_POR_CATEGORIA, promociones, mediosPago, agregarVenta } = useAppContext()
+  const { productos: PRODUCTOS_POR_CATEGORIA, promociones, mediosPago, agregarVenta, descuentos } = useAppContext()
   const [categoriaActual, setCategoriaActual] = useState<string | null>(null)
   const [carrito, setCarrito] = useState<ItemVenta[]>([])
   const [medioPago, setMedioPago] = useState("")
@@ -105,7 +105,7 @@ export default function POS() {
   }
 
   const aplicarDescuento = (porcentaje: number) => {
-    setDescuentoAplicado(porcentaje)
+    setDescuentoAplicado(porcentaje / 100)
   }
 
   const quitarDescuento = () => {
@@ -515,13 +515,13 @@ export default function POS() {
                     )}
                   </div>
                   <div className="flex gap-2">
-                    {promociones.map((descuento) => (
+                    {descuentos.map((descuento) => (
                       <Button
                         key={descuento.id}
                         size="sm"
-                        variant={descuentoAplicado === descuento.porcentaje ? "default" : "outline"}
+                        variant={descuentoAplicado === descuento.porcentaje / 100 ? "default" : "outline"}
                         onClick={() => aplicarDescuento(descuento.porcentaje)}
-                        disabled={descuentoAplicado === descuento.porcentaje}
+                        disabled={descuentoAplicado === descuento.porcentaje / 100}
                       >
                         <Percent className="h-3 w-3 mr-1" />
                         {descuento.nombre}
