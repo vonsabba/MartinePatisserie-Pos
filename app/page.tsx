@@ -27,35 +27,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { usePromociones } from "@/hooks/use-promociones"
 import { useAppContext } from "@/contexts/app-context"
-
-const MEDIOS_PAGO = [
-  { id: "efectivo", nombre: "Efectivo" },
-  { id: "tarjeta", nombre: "Tarjeta" },
-  { id: "transferencia", nombre: "Transferencia" },
-]
-
-const CONFIGURACION_RECARGOS = {
-  efectivo: { recargo: 0, nombre: "Efectivo" },
-  tarjeta: { recargo: 1.24, nombre: "Tarjeta" },
-  transferencia: { recargo: 1.24, nombre: "Transferencia" },
-}
-
-const DESCUENTOS_DISPONIBLES = [
-  { id: 10, nombre: "10% OFF", porcentaje: 0.1 },
-  { id: 20, nombre: "20% OFF", porcentaje: 0.2 },
-]
-
-interface Producto {
-  id: number
-  nombre: string
-  precio: number
-  imagen?: string
-}
-
-interface ItemVenta {
-  producto: Producto
-  cantidad: number
-}
+import type { ItemVenta, Producto } from "@/types"
 
 export default function POS() {
   const { productos: PRODUCTOS_POR_CATEGORIA, promociones, mediosPago, agregarVenta } = useAppContext()
@@ -157,21 +129,36 @@ export default function POS() {
     return calcularSubtotal() - calcularDescuentoTotal()
   }
 
+  // Corregir cálculo de totales usando medios de pago del contexto y permitir valores negativos
   const calcularTotal = () => {
     const subtotalConDescuento = calcularSubtotalConDescuento()
 
-    if (!medioPago || medioPago === "efectivo") {
+    if (!medioPago) {
       return subtotalConDescuento
     }
 
-    // Aplicar recargo y redondear hacia arriba en centenas
-    const totalConRecargo =
-      subtotalConDescuento * CONFIGURACION_RECARGOS[medioPago as keyof typeof CONFIGURACION_RECARGOS].recargo
-    return Math.ceil(totalConRecargo / 100) * 100
+    const medioSeleccionado = mediosPago.find((m) => m.id === medioPago)
+    if (!medioSeleccionado || medioSeleccionado.recargo === 0) {
+      return subtotalConDescuento
+    }
+
+    const porcentajeRecargo = medioSeleccionado.recargo / 100 // Convertir de entero a decimal
+    const totalConRecargo = subtotalConDescuento * (1 + porcentajeRecargo)
+
+    // Solo redondear hacia arriba si es un recargo positivo
+    if (porcentajeRecargo > 0) {
+      return Math.ceil(totalConRecargo / 100) * 100
+    }
+
+    return Math.round(totalConRecargo)
   }
 
   const obtenerRecargo = () => {
-    if (!medioPago || medioPago === "efectivo") return 0
+    if (!medioPago) return 0
+
+    const medioSeleccionado = mediosPago.find((m) => m.id === medioPago)
+    if (!medioSeleccionado || medioSeleccionado.recargo === 0) return 0
+
     const subtotalConDescuento = calcularSubtotalConDescuento()
     return calcularTotal() - subtotalConDescuento
   }
@@ -535,16 +522,16 @@ export default function POS() {
                     )}
                   </div>
                   <div className="flex gap-2">
-                    {DESCUENTOS_DISPONIBLES.map((descuento) => (
+                    {promociones.map((promocion) => (
                       <Button
-                        key={descuento.id}
+                        key={promocion.id}
                         size="sm"
-                        variant={descuentoAplicado === descuento.porcentaje ? "default" : "outline"}
-                        onClick={() => aplicarDescuento(descuento.porcentaje)}
-                        disabled={descuentoAplicado === descuento.porcentaje}
+                        variant={descuentoAplicado === promocion.porcentaje ? "default" : "outline"}
+                        onClick={() => aplicarDescuento(promocion.porcentaje)}
+                        disabled={descuentoAplicado === promocion.porcentaje}
                       >
                         <Percent className="h-3 w-3 mr-1" />
-                        {descuento.nombre}
+                        {promocion.nombre}
                       </Button>
                     ))}
                   </div>
@@ -579,12 +566,17 @@ export default function POS() {
                     </div>
                   )}
 
-                  {obtenerRecargo() > 0 && (
-                    <div className="flex justify-between items-center text-orange-600">
+                  {/* Mostrar recargos/descuentos con colores apropiados */}
+                  {obtenerRecargo() !== 0 && (
+                    <div
+                      className={`flex justify-between items-center ${obtenerRecargo() > 0 ? "text-orange-600" : "text-green-600"}`}
+                    >
                       <span className="text-sm">
-                        Recargo ({CONFIGURACION_RECARGOS[medioPago as keyof typeof CONFIGURACION_RECARGOS].nombre}):
+                        {obtenerRecargo() > 0 ? "Recargo" : "Descuento"} ({obtenerNombreMedioPago(medioPago)}):
                       </span>
-                      <span className="text-sm">+${obtenerRecargo().toLocaleString()}</span>
+                      <span className="text-sm">
+                        {obtenerRecargo() > 0 ? "+" : ""}${obtenerRecargo().toLocaleString()}
+                      </span>
                     </div>
                   )}
 
@@ -604,9 +596,18 @@ export default function POS() {
                       <SelectValue placeholder="Seleccionar medio de pago" />
                     </SelectTrigger>
                     <SelectContent>
-                      {MEDIOS_PAGO.map((medio) => (
+                      {/* Usar medios de pago del contexto y mostrar porcentajes */}
+                      {mediosPago.map((medio) => (
                         <SelectItem key={medio.id} value={medio.id}>
                           {medio.nombre}
+                          {medio.recargo !== 0 && (
+                            <span
+                              className={`ml-2 text-xs ${medio.recargo > 0 ? "text-orange-600" : "text-green-600"}`}
+                            >
+                              ({medio.recargo > 0 ? "+" : ""}
+                              {medio.recargo}%)
+                            </span>
+                          )}
                         </SelectItem>
                       ))}
                     </SelectContent>
