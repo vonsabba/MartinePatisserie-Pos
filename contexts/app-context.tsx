@@ -51,6 +51,13 @@ interface Descuento {
   porcentaje: number
 }
 
+interface Usuario {
+  id: number
+  nombre: string
+  contraseña: string
+  rol: "administrador" | "empleado"
+}
+
 interface ItemVenta {
   producto: Producto
   cantidad: number
@@ -79,6 +86,8 @@ interface AppContextType {
   setMediosPago: (medios: MedioPago[]) => void
   descuentos: Descuento[]
   setDescuentos: (descuentos: Descuento[]) => void
+  usuarios: Usuario[]
+  setUsuarios: (usuarios: Usuario[]) => void
   ventas: Venta[]
   agregarVenta: (venta: Omit<Venta, "id">) => void
   editarVenta: (id: string, ventaEditada: Omit<Venta, "id">) => void
@@ -227,6 +236,11 @@ const DESCUENTOS_INICIALES: Descuento[] = [
   { id: 20, nombre: "20% OFF", porcentaje: 20 },
 ]
 
+const USUARIOS_INICIALES: Usuario[] = [
+  { id: 1, nombre: "admin", contraseña: "admin123", rol: "administrador" },
+  { id: 2, nombre: "empleado", contraseña: "emp123", rol: "empleado" },
+]
+
 const AppContext = createContext<AppContextType | undefined>(undefined)
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
@@ -234,6 +248,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [promociones, setPromociones] = useState<Promocion[]>(PROMOCIONES_INICIALES)
   const [mediosPago, setMediosPago] = useState<MedioPago[]>(MEDIOS_PAGO_INICIALES)
   const [descuentos, setDescuentos] = useState<Descuento[]>(DESCUENTOS_INICIALES)
+  const [usuarios, setUsuarios] = useState<Usuario[]>(USUARIOS_INICIALES)
   const [ventas, setVentas] = useState<Venta[]>([])
 
   // Persistir en localStorage
@@ -246,6 +261,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (parsed.promociones) setPromociones(parsed.promociones)
         if (parsed.mediosPago) setMediosPago(parsed.mediosPago)
         if (parsed.descuentos) setDescuentos(parsed.descuentos)
+        if (parsed.usuarios) setUsuarios(parsed.usuarios)
         if (parsed.ventas) setVentas(parsed.ventas)
       } catch (error) {
         console.error("Error loading saved data:", error)
@@ -259,10 +275,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       promociones,
       mediosPago,
       descuentos,
+      usuarios,
       ventas,
     }
     localStorage.setItem("pasteleria-data", JSON.stringify(dataToSave))
-  }, [productos, promociones, mediosPago, descuentos, ventas])
+  }, [productos, promociones, mediosPago, descuentos, usuarios, ventas])
 
   const agregarVenta = (nuevaVenta: Omit<Venta, "id">) => {
     const venta: Venta = {
@@ -291,6 +308,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setMediosPago,
         descuentos,
         setDescuentos,
+        usuarios,
+        setUsuarios,
         ventas,
         agregarVenta,
         editarVenta,
