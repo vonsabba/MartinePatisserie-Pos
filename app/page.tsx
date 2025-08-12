@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -21,7 +21,7 @@ import {
   Layers,
   BarChart3,
   Activity,
-  ImageIcon,
+  Package,
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -38,6 +38,7 @@ export default function POS() {
   const [ventaConcretada, setVentaConcretada] = useState(false)
   const [modalManual, setModalManual] = useState(false)
   const [productoManual, setProductoManual] = useState({ nombre: "", precio: "" })
+  const [busquedaProducto, setBusquedaProducto] = useState("")
   const [fechaHora, setFechaHora] = useState(new Date())
   const [ultimaVenta, setUltimaVenta] = useState<{
     total: number
@@ -218,6 +219,7 @@ export default function POS() {
     setDescuentoAplicado(0)
     setVentaConcretada(false)
     setCategoriaActual(null)
+    setBusquedaProducto("") // Limpiar búsqueda al iniciar nueva venta
   }
 
   const formatearFechaHora = (fecha: Date) => {
@@ -230,6 +232,20 @@ export default function POS() {
       minute: "2-digit",
     })
   }
+
+  const productosEncontrados = useMemo(() => {
+    if (!busquedaProducto.trim()) return []
+
+    const productos: Producto[] = []
+    Object.values(PRODUCTOS_POR_CATEGORIA).forEach((categoria) => {
+      categoria.productos.forEach((producto) => {
+        if (producto.nombre.toLowerCase().includes(busquedaProducto.toLowerCase())) {
+          productos.push(producto)
+        }
+      })
+    })
+    return productos.slice(0, 8) // Limitar a 8 resultados
+  }, [busquedaProducto, PRODUCTOS_POR_CATEGORIA])
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 px-10 py-10">
@@ -296,53 +312,105 @@ export default function POS() {
                   : "Categorías"}
               </CardTitle>
               <div className="flex gap-2">
+                <div className="flex items-center gap-2">
+                  <Input
+                    placeholder="Buscar producto..."
+                    value={busquedaProducto}
+                    onChange={(e) => setBusquedaProducto(e.target.value)}
+                    className="w-48"
+                  />
+                  <Dialog open={modalManual} onOpenChange={setModalManual}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <DollarSign className="h-4 w-4 mr-2" />
+                        Manual
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Agregar Producto Manual</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="nombre-manual">Nombre del producto</Label>
+                          <Input
+                            id="nombre-manual"
+                            value={productoManual.nombre}
+                            onChange={(e) => setProductoManual((prev) => ({ ...prev, nombre: e.target.value }))}
+                            placeholder="Ej: Producto especial"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="precio-manual">Precio</Label>
+                          <Input
+                            id="precio-manual"
+                            type="number"
+                            value={productoManual.precio}
+                            onChange={(e) => setProductoManual((prev) => ({ ...prev, precio: e.target.value }))}
+                            placeholder="0"
+                          />
+                        </div>
+                        <Button onClick={agregarProductoManual} className="w-full">
+                          Agregar al Carrito
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
                 {categoriaActual && (
                   <Button variant="outline" size="sm" onClick={volverACategorias}>
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Volver
                   </Button>
                 )}
-                <Dialog open={modalManual} onOpenChange={setModalManual}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <DollarSign className="h-4 w-4 mr-2" />
-                      Manual
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Agregar Producto Manual</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="nombre-manual">Nombre del producto</Label>
-                        <Input
-                          id="nombre-manual"
-                          value={productoManual.nombre}
-                          onChange={(e) => setProductoManual((prev) => ({ ...prev, nombre: e.target.value }))}
-                          placeholder="Ej: Producto especial"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="precio-manual">Precio</Label>
-                        <Input
-                          id="precio-manual"
-                          type="number"
-                          value={productoManual.precio}
-                          onChange={(e) => setProductoManual((prev) => ({ ...prev, precio: e.target.value }))}
-                          placeholder="0"
-                        />
-                      </div>
-                      <Button onClick={agregarProductoManual} className="w-full">
-                        Agregar al Carrito
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
               </div>
             </CardHeader>
             <CardContent>
-              {!categoriaActual ? (
+              {busquedaProducto.trim() ? (
+                <div className="space-y-4">
+                  <h4 className="text-sm font-medium text-gray-600">
+                    Resultados de búsqueda ({productosEncontrados.length})
+                  </h4>
+                  {productosEncontrados.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
+                      {productosEncontrados.map((producto) => (
+                        <div
+                          key={producto.id}
+                          className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                          onClick={() => {
+                            agregarProducto(producto)
+                            setBusquedaProducto("") // Limpiar búsqueda después de agregar
+                          }}
+                        >
+                          <div className="flex items-center gap-3">
+                            {producto.imagen ? (
+                              <div className="w-12 h-12 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
+                                <Image
+                                  src={producto.imagen || "/placeholder.svg"}
+                                  alt={producto.nombre}
+                                  width={48}
+                                  height={48}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            ) : (
+                              <div className="w-12 h-12 rounded-md bg-gray-100 flex items-center justify-center flex-shrink-0">
+                                <Package className="h-6 w-6 text-gray-400" />
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-sm truncate">{producto.nombre}</h4>
+                              <p className="text-green-600 font-semibold">${producto.precio}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 text-center py-8">No se encontraron productos</p>
+                  )}
+                </div>
+              ) : !categoriaActual ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {Object.entries(PRODUCTOS_POR_CATEGORIA).map(([key, categoria]) => (
                     <div
@@ -377,11 +445,11 @@ export default function POS() {
                             </div>
                           ) : (
                             <div className="w-12 h-12 rounded-md bg-gray-100 flex items-center justify-center flex-shrink-0">
-                              <ImageIcon className="h-6 w-6 text-gray-400" />
+                              <Package className="h-6 w-6 text-gray-400" />
                             </div>
                           )}
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-medium text-sm truncate">{producto.nombre}</h3>
+                            <h4 className="font-medium text-sm truncate">{producto.nombre}</h4>
                             <p className="text-lg font-bold text-green-600">${producto.precio.toLocaleString()}</p>
                           </div>
                         </div>
