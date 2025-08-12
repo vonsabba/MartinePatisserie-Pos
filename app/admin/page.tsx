@@ -626,7 +626,7 @@ export default function AdminPage() {
         </div>
 
         <Tabs defaultValue="productos" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="productos">Productos</TabsTrigger>
             <TabsTrigger value="pagos">Medios de Pago</TabsTrigger>
             <TabsTrigger value="descuentos">Descuentos</TabsTrigger>
