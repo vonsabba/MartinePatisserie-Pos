@@ -641,7 +641,7 @@ export default function EstadisticasPage() {
                         color: "hsl(var(--chart-3))",
                       },
                     }}
-                    className="h-[300px]"
+                    className="h-[300px] w-full"
                   >
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={analisisTemporal.porMes}>
