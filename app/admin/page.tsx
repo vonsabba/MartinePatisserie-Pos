@@ -571,7 +571,7 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Agregando pestaña Usuarios al TabsList */}
+        {/* Tabs Content - Agregando todas las pestañas faltantes */}
         <Tabs defaultValue="productos" className="space-y-6">
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="productos">Productos</TabsTrigger>
@@ -581,7 +581,357 @@ export default function AdminPage() {
             <TabsTrigger value="usuarios">Usuarios</TabsTrigger>
           </TabsList>
 
-          {/* Agregando TabsContent para usuarios */}
+          <TabsContent value="productos">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Gestión de Productos</CardTitle>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => abrirModalCategoria()}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Categorías
+                  </Button>
+                  <Button onClick={() => abrirModalProducto()}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nuevo Producto
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-4 mb-6">
+                  <div className="flex-1 relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <Input
+                      placeholder="Buscar productos..."
+                      value={busquedaProductos}
+                      onChange={(e) => setBusquedaProductos(e.target.value)}
+                      className="pl-10 pr-10"
+                    />
+                    {busquedaProductos && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+                        onClick={() => setBusquedaProductos("")}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => setOrdenProductos(ordenProductos === "asc" ? "desc" : "asc")}
+                  >
+                    <ArrowUpDown className="h-4 w-4 mr-2" />
+                    {ordenProductos === "asc" ? "A-Z" : "Z-A"}
+                  </Button>
+                  <Button variant="outline" onClick={toggleTodasCategorias}>
+                    Categorías ({categoriasVisibles.length}/{Object.keys(productos).length})
+                  </Button>
+                </div>
+
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {Object.entries(productos).map(([key, categoria]: [string, any]) => (
+                    <Badge
+                      key={key}
+                      variant={categoriasVisibles.includes(key) ? "default" : "outline"}
+                      className="cursor-pointer"
+                      onClick={() => toggleCategoria(key)}
+                    >
+                      {categoria.nombre} ({categoria.productos.length})
+                    </Badge>
+                  ))}
+                </div>
+
+                {Object.entries(filtrarProductos()).map(([categoriaKey, categoria]: [string, any]) => (
+                  <div key={categoriaKey} className="mb-8">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-blue-600">
+                        {categoria.nombre} ({categoria.productos.length} productos)
+                      </h3>
+                      <Button variant="outline" size="sm" onClick={() => abrirModalCategoria(categoriaKey)}>
+                        <Edit className="h-3 w-3 mr-1" />
+                        Editar Categoría
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {categoria.productos.map((producto: any) => (
+                        <div key={producto.id} className="p-4 border rounded-lg bg-white">
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="flex items-center gap-2">
+                              {producto.imagen && (
+                                <img
+                                  src={producto.imagen || "/placeholder.svg"}
+                                  alt={producto.nombre}
+                                  className="w-8 h-8 object-cover rounded"
+                                />
+                              )}
+                              <h4 className="font-medium">{producto.nombre}</h4>
+                            </div>
+                            <div className="flex gap-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => abrirModalProducto(producto, categoriaKey)}
+                              >
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                              <Button size="sm" variant="ghost" onClick={() => eliminarProducto(producto.id)}>
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                          <p className="text-lg font-semibold text-green-600">${producto.precio}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="pagos">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Medios de Pago</CardTitle>
+                <Button onClick={() => abrirModalMedioPago()}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nuevo Medio de Pago
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-4 mb-6">
+                  <div className="flex-1 relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <Input
+                      placeholder="Buscar medios de pago..."
+                      value={busquedaMedios}
+                      onChange={(e) => setBusquedaMedios(e.target.value)}
+                      className="pl-10 pr-10"
+                    />
+                    {busquedaMedios && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+                        onClick={() => setBusquedaMedios("")}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                  <Button variant="outline" onClick={() => setOrdenMedios(ordenMedios === "asc" ? "desc" : "asc")}>
+                    <ArrowUpDown className="h-4 w-4 mr-2" />
+                    {ordenMedios === "asc" ? "A-Z" : "Z-A"}
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filtrarMediosPago().map((medio) => (
+                    <div key={medio.id} className="p-4 border rounded-lg bg-white">
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="font-medium">{medio.nombre}</h4>
+                        <div className="flex gap-1">
+                          <Button size="sm" variant="ghost" onClick={() => abrirModalMedioPago(medio)}>
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => eliminarMedioPago(medio.id)}>
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-600">Recargo: {medio.recargo}%</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="descuentos">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Descuentos Disponibles</CardTitle>
+                <Button onClick={() => abrirModalDescuento()}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nuevo Descuento
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-4 mb-6">
+                  <div className="flex-1 relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <Input
+                      placeholder="Buscar descuentos..."
+                      value={busquedaDescuentos}
+                      onChange={(e) => setBusquedaDescuentos(e.target.value)}
+                      className="pl-10 pr-10"
+                    />
+                    {busquedaDescuentos && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+                        onClick={() => setBusquedaDescuentos("")}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => setOrdenDescuentos(ordenDescuentos === "asc" ? "desc" : "asc")}
+                  >
+                    <ArrowUpDown className="h-4 w-4 mr-2" />
+                    {ordenDescuentos === "asc" ? "A-Z" : "Z-A"}
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filtrarDescuentos().map((descuento) => (
+                    <div key={descuento.id} className="p-4 border rounded-lg bg-white">
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="font-medium">{descuento.nombre}</h4>
+                        <div className="flex gap-1">
+                          <Button size="sm" variant="ghost" onClick={() => abrirModalDescuento(descuento)}>
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => eliminarDescuento(descuento.id)}>
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-600">Descuento: {descuento.porcentaje}%</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="promociones">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Promociones</CardTitle>
+                <Button onClick={() => abrirModalPromocion()}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nueva Promoción
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-4 mb-6">
+                  <div className="flex-1 relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <Input
+                      placeholder="Buscar promociones..."
+                      value={busquedaPromociones}
+                      onChange={(e) => setBusquedaPromociones(e.target.value)}
+                      className="pl-10 pr-10"
+                    />
+                    {busquedaPromociones && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+                        onClick={() => setBusquedaPromociones("")}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => setOrdenPromociones(ordenPromociones === "asc" ? "desc" : "asc")}
+                  >
+                    <ArrowUpDown className="h-4 w-4 mr-2" />
+                    {ordenPromociones === "asc" ? "A-Z" : "Z-A"}
+                  </Button>
+                </div>
+
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-lg font-semibold text-green-600 mb-4">
+                      Promociones Activas ({filtrarPromociones().filter((p) => p.activa).length})
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {filtrarPromociones()
+                        .filter((promocion) => promocion.activa)
+                        .map((promocion) => (
+                          <div key={promocion.id} className="p-4 border rounded-lg bg-green-50 border-green-200">
+                            <div className="flex justify-between items-start mb-2">
+                              <h4 className="font-medium">{promocion.nombre}</h4>
+                              <div className="flex gap-1">
+                                <Button size="sm" variant="ghost" onClick={() => abrirModalPromocion(promocion)}>
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                                <Button size="sm" variant="ghost" onClick={() => togglePromocion(promocion.id)}>
+                                  <X className="h-3 w-3" />
+                                </Button>
+                                <Button size="sm" variant="ghost" onClick={() => eliminarPromocion(promocion.id)}>
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                            <p className="text-sm text-gray-600 mb-2">{promocion.descripcion}</p>
+                            <div className="flex justify-between items-center text-xs text-gray-500">
+                              <span>Desde: {promocion.fechaInicio}</span>
+                              <span>Hasta: {promocion.fechaFin}</span>
+                            </div>
+                            <Badge className="mt-2" variant="default">
+                              Activa
+                            </Badge>
+                            <Badge className="mt-2 ml-2" variant="outline">
+                              {promocion.tipo}
+                            </Badge>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-600 mb-4">
+                      Promociones Inactivas ({filtrarPromociones().filter((p) => !p.activa).length})
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {filtrarPromociones()
+                        .filter((promocion) => !promocion.activa)
+                        .map((promocion) => (
+                          <div key={promocion.id} className="p-4 border rounded-lg bg-gray-50">
+                            <div className="flex justify-between items-start mb-2">
+                              <h4 className="font-medium text-gray-700">{promocion.nombre}</h4>
+                              <div className="flex gap-1">
+                                <Button size="sm" variant="ghost" onClick={() => abrirModalPromocion(promocion)}>
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                                <Button size="sm" variant="ghost" onClick={() => togglePromocion(promocion.id)}>
+                                  <Plus className="h-3 w-3" />
+                                </Button>
+                                <Button size="sm" variant="ghost" onClick={() => eliminarPromocion(promocion.id)}>
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                            <p className="text-sm text-gray-600 mb-2">{promocion.descripcion}</p>
+                            <div className="flex justify-between items-center text-xs text-gray-500">
+                              <span>Desde: {promocion.fechaInicio}</span>
+                              <span>Hasta: {promocion.fechaFin}</span>
+                            </div>
+                            <Badge className="mt-2" variant="secondary">
+                              Inactiva
+                            </Badge>
+                            <Badge className="mt-2 ml-2" variant="outline">
+                              {promocion.tipo}
+                            </Badge>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Pestaña de usuarios ya existente */}
           <TabsContent value="usuarios">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
@@ -645,7 +995,230 @@ export default function AdminPage() {
           </TabsContent>
         </Tabs>
 
-        {/* Agregando Modal para usuarios */}
+        {/* Modal para productos */}
+        <Dialog open={modalProductoAbierto} onOpenChange={setModalProductoAbierto}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{productoEditando ? "Editar Producto" : "Nuevo Producto"}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="nombre-producto">Nombre del Producto</Label>
+                <Input
+                  id="nombre-producto"
+                  value={formProducto.nombre}
+                  onChange={(e) => setFormProducto((prev) => ({ ...prev, nombre: e.target.value }))}
+                  placeholder="Ingrese el nombre del producto"
+                />
+              </div>
+              <div>
+                <Label htmlFor="precio-producto">Precio</Label>
+                <Input
+                  id="precio-producto"
+                  type="number"
+                  step="0.01"
+                  value={formProducto.precio}
+                  onChange={(e) => setFormProducto((prev) => ({ ...prev, precio: e.target.value }))}
+                  placeholder="Ingrese el precio"
+                />
+              </div>
+              <div>
+                <Label htmlFor="categoria-producto">Categoría</Label>
+                <Select
+                  value={formProducto.categoria}
+                  onValueChange={(value) => setFormProducto((prev) => ({ ...prev, categoria: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccione una categoría" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(productos).map(([key, categoria]: [string, any]) => (
+                      <SelectItem key={key} value={key}>
+                        {categoria.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="imagen-producto">Imagen del Producto</Label>
+                <Input id="imagen-producto" type="file" accept="image/*" onChange={handleImageUpload} />
+                {formProducto.imagen && (
+                  <div className="mt-2">
+                    <img
+                      src={formProducto.imagen || "/placeholder.svg"}
+                      alt="Preview"
+                      className="w-20 h-20 object-cover rounded"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setFormProducto((prev) => ({ ...prev, imagen: "" }))}
+                      className="mt-2"
+                    >
+                      Quitar imagen
+                    </Button>
+                  </div>
+                )}
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setModalProductoAbierto(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={guardarProducto}>{productoEditando ? "Actualizar" : "Crear"}</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal para medios de pago */}
+        <Dialog open={modalMedioPagoAbierto} onOpenChange={setModalMedioPagoAbierto}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{medioPagoEditando ? "Editar Medio de Pago" : "Nuevo Medio de Pago"}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="nombre-medio">Nombre del Medio de Pago</Label>
+                <Input
+                  id="nombre-medio"
+                  value={formMedioPago.nombre}
+                  onChange={(e) => setFormMedioPago((prev) => ({ ...prev, nombre: e.target.value }))}
+                  placeholder="Ingrese el nombre del medio de pago"
+                />
+              </div>
+              <div>
+                <Label htmlFor="recargo-medio">Recargo (%)</Label>
+                <Input
+                  id="recargo-medio"
+                  type="number"
+                  step="0.01"
+                  value={formMedioPago.recargo}
+                  onChange={(e) => setFormMedioPago((prev) => ({ ...prev, recargo: e.target.value }))}
+                  placeholder="Ingrese el porcentaje de recargo"
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  Valores positivos son recargos, valores negativos son descuentos
+                </p>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setModalMedioPagoAbierto(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={guardarMedioPago}>{medioPagoEditando ? "Actualizar" : "Crear"}</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal para descuentos */}
+        <Dialog open={modalDescuentoAbierto} onOpenChange={setModalDescuentoAbierto}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{descuentoEditando ? "Editar Descuento" : "Nuevo Descuento"}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="nombre-descuento">Nombre del Descuento</Label>
+                <Input
+                  id="nombre-descuento"
+                  value={formDescuento.nombre}
+                  onChange={(e) => setFormDescuento((prev) => ({ ...prev, nombre: e.target.value }))}
+                  placeholder="Ingrese el nombre del descuento"
+                />
+              </div>
+              <div>
+                <Label htmlFor="porcentaje-descuento">Porcentaje (%)</Label>
+                <Input
+                  id="porcentaje-descuento"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formDescuento.porcentaje}
+                  onChange={(e) => setFormDescuento((prev) => ({ ...prev, porcentaje: e.target.value }))}
+                  placeholder="Ingrese el porcentaje de descuento"
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setModalDescuentoAbierto(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={guardarDescuento}>{descuentoEditando ? "Actualizar" : "Crear"}</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal para promociones */}
+        <Dialog open={modalPromocionAbierto} onOpenChange={setModalPromocionAbierto}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{promocionEditando ? "Editar Promoción" : "Nueva Promoción"}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="nombre-promocion">Nombre de la Promoción</Label>
+                <Input
+                  id="nombre-promocion"
+                  value={formPromocion.nombre}
+                  onChange={(e) => setFormPromocion((prev) => ({ ...prev, nombre: e.target.value }))}
+                  placeholder="Ingrese el nombre de la promoción"
+                />
+              </div>
+              <div>
+                <Label htmlFor="descripcion-promocion">Descripción</Label>
+                <Input
+                  id="descripcion-promocion"
+                  value={formPromocion.descripcion}
+                  onChange={(e) => setFormPromocion((prev) => ({ ...prev, descripcion: e.target.value }))}
+                  placeholder="Ingrese la descripción de la promoción"
+                />
+              </div>
+              <div>
+                <Label htmlFor="fecha-inicio">Fecha de Inicio</Label>
+                <Input
+                  id="fecha-inicio"
+                  type="date"
+                  value={formPromocion.fechaInicio}
+                  onChange={(e) => setFormPromocion((prev) => ({ ...prev, fechaInicio: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="fecha-fin">Fecha de Fin</Label>
+                <Input
+                  id="fecha-fin"
+                  type="date"
+                  value={formPromocion.fechaFin}
+                  onChange={(e) => setFormPromocion((prev) => ({ ...prev, fechaFin: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="tipo-promocion">Tipo de Promoción</Label>
+                <Select
+                  value={formPromocion.tipo}
+                  onValueChange={(value) => setFormPromocion((prev) => ({ ...prev, tipo: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccione el tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="2x1">2x1</SelectItem>
+                    <SelectItem value="descuento-cantidad">Descuento por Cantidad</SelectItem>
+                    <SelectItem value="combo">Combo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setModalPromocionAbierto(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={guardarPromocion}>{promocionEditando ? "Actualizar" : "Crear"}</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal para usuarios ya existente */}
         <Dialog open={modalUsuarioAbierto} onOpenChange={setModalUsuarioAbierto}>
           <DialogContent>
             <DialogHeader>
@@ -697,8 +1270,6 @@ export default function AdminPage() {
             </div>
           </DialogContent>
         </Dialog>
-
-        {/* ... existing modals ... */}
       </div>
     </div>
   )
