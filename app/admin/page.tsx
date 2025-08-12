@@ -712,7 +712,7 @@ export default function AdminPage() {
                 <div className="space-y-6">
                   {Object.entries(filtrarProductos()).map(([categoriaKey, categoria]) => (
                     <div key={categoriaKey} className="space-y-3">
-                      <h3 className="text-lg font-semibold text-blue-700 border-b pb-2">
+                      <h3 className="text-lg font-semibold border-b pb-2 text-[rgba(188,149,54,1)]">
                         {categoria.nombre} ({categoria.productos.length} productos)
                       </h3>
                       {categoria.productos.length === 0 ? (
@@ -763,7 +763,7 @@ export default function AdminPage() {
                                     >
                                       <Edit className="h-3 w-3" />
                                     </Button>
-                                    <Button
+                                    <Button className="bg-[rgba(188,149,54,1)]"
                                       size="sm"
                                       variant="destructive"
                                       onClick={() => eliminarProducto(producto.id)}

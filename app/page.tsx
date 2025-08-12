@@ -418,7 +418,7 @@ export default function POS() {
                       className="p-6 border-2 rounded-lg hover:bg-blue-50 hover:border-blue-300 cursor-pointer transition-all text-center"
                       onClick={() => setCategoriaActual(key)}
                     >
-                      <h3 className="text-xl font-semibold text-blue-700">{categoria.nombre}</h3>
+                      <h3 className="text-xl font-semibold text-[rgba(188,149,54,1)]">{categoria.nombre}</h3>
                       <p className="text-sm text-gray-600 mt-2">{categoria.productos.length} productos</p>
                     </div>
                   ))}
@@ -494,7 +494,7 @@ export default function POS() {
                         >
                           <Plus className="h-3 w-3" />
                         </Button>
-                        <Button size="sm" variant="destructive" onClick={() => eliminarProducto(item.producto.id)}>
+                        <Button className="text-white bg-[rgba(188,149,54,1)]" size="sm" variant="destructive" onClick={() => eliminarProducto(item.producto.id)}>
                           <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
