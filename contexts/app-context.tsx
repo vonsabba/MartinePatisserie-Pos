@@ -100,7 +100,7 @@ const PRODUCTOS_INICIALES = {
     nombre: "Secos",
     orden: 1,
     productos: [
-      { id: 1, nombre: "Cookie Pecán", precio: 180, imagen: "cookie-pecan.jpg" },
+      { id: 1, nombre: "Cookie Pecán", precio: 180, imagen: "placeholder.svg" },
       { id: 2, nombre: "Cookie Avellanas", precio: 180, imagen: "cookie-avellanas.jpg" },
       { id: 3, nombre: "Cookie Pistacho", precio: 200, imagen: "cookie-pistacho.jpg" },
       { id: 4, nombre: "Cookie Shot", precio: 160, imagen: "cookie-shot.jpg" },
