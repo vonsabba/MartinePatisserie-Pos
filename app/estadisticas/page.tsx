@@ -605,7 +605,28 @@ export default function EstadisticasPage() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="lg:col-span-2">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5" />
+                    Rendimiento por Día de la Semana
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-7 gap-4">
+                    {analisisTemporal.porDiaSemana.map((dia) => (
+                      <div key={dia.dia} className="text-center p-4 bg-gray-50 rounded-lg">
+                        <p className="font-medium text-gray-600">{dia.dia}</p>
+                        <p className="text-2xl font-bold text-blue-600 mt-2">{dia.ventas}</p>
+                        <p className="text-sm text-gray-500">ventas</p>
+                        <p className="text-lg font-semibold text-green-600 mt-1">${dia.ingresos.toLocaleString()}</p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="lg:col-span-2">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Calendar className="h-5 w-5" />
@@ -635,26 +656,6 @@ export default function EstadisticasPage() {
                 </CardContent>
               </Card>
 
-              <Card className="lg:col-span-2">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5" />
-                    Rendimiento por Día de la Semana
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-7 gap-4">
-                    {analisisTemporal.porDiaSemana.map((dia) => (
-                      <div key={dia.dia} className="text-center p-4 bg-gray-50 rounded-lg">
-                        <p className="font-medium text-gray-600">{dia.dia}</p>
-                        <p className="text-2xl font-bold text-blue-600 mt-2">{dia.ventas}</p>
-                        <p className="text-sm text-gray-500">ventas</p>
-                        <p className="text-lg font-semibold text-green-600 mt-1">${dia.ingresos.toLocaleString()}</p>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
             </div>
           </TabsContent>
 
