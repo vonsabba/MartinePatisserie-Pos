@@ -27,7 +27,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { usePromociones } from "@/hooks/use-promociones"
 import { useAppContext } from "@/contexts/app-context"
-import type { ItemVenta, Producto } from "@/types"
+import type { ItemVenta, Producto } from "@/types" // Import or declare the variables here
 
 export default function POS() {
   const { productos: PRODUCTOS_POR_CATEGORIA, promociones, mediosPago, agregarVenta } = useAppContext()
@@ -129,7 +129,6 @@ export default function POS() {
     return calcularSubtotal() - calcularDescuentoTotal()
   }
 
-  // Corregir cálculo de totales usando medios de pago del contexto y permitir valores negativos
   const calcularTotal = () => {
     const subtotalConDescuento = calcularSubtotalConDescuento()
 
@@ -142,10 +141,9 @@ export default function POS() {
       return subtotalConDescuento
     }
 
-    const porcentajeRecargo = medioSeleccionado.recargo / 100 // Convertir de entero a decimal
+    const porcentajeRecargo = medioSeleccionado.recargo / 100
     const totalConRecargo = subtotalConDescuento * (1 + porcentajeRecargo)
 
-    // Solo redondear hacia arriba si es un recargo positivo
     if (porcentajeRecargo > 0) {
       return Math.ceil(totalConRecargo / 100) * 100
     }
@@ -171,7 +169,6 @@ export default function POS() {
   const procesarVenta = () => {
     if (carrito.length === 0 || !medioPago) return
 
-    // CALCULAR TODOS LOS VALORES ANTES DE LIMPIAR EL ESTADO
     const subtotal = calcularSubtotal()
     const descuentoManual = calcularDescuentoManual()
     const recargo = obtenerRecargo()
@@ -193,10 +190,8 @@ export default function POS() {
 
     console.log("Venta procesada:", venta)
 
-    // Registrar la venta en el contexto
     agregarVenta(venta)
 
-    // GUARDAR LOS DATOS PARA EL MENSAJE
     setUltimaVenta({
       total,
       subtotal,
@@ -348,7 +343,6 @@ export default function POS() {
             </CardHeader>
             <CardContent>
               {!categoriaActual ? (
-                // Vista de categorías
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {Object.entries(PRODUCTOS_POR_CATEGORIA).map(([key, categoria]) => (
                     <div
@@ -362,7 +356,6 @@ export default function POS() {
                   ))}
                 </div>
               ) : (
-                // Vista de productos de la categoría seleccionada
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
                   {PRODUCTOS_POR_CATEGORIA[categoriaActual as keyof typeof PRODUCTOS_POR_CATEGORIA].productos.map(
                     (producto) => (
@@ -522,16 +515,16 @@ export default function POS() {
                     )}
                   </div>
                   <div className="flex gap-2">
-                    {promociones.map((promocion) => (
+                    {promociones.map((descuento) => (
                       <Button
-                        key={promocion.id}
+                        key={descuento.id}
                         size="sm"
-                        variant={descuentoAplicado === promocion.porcentaje ? "default" : "outline"}
-                        onClick={() => aplicarDescuento(promocion.porcentaje)}
-                        disabled={descuentoAplicado === promocion.porcentaje}
+                        variant={descuentoAplicado === descuento.porcentaje ? "default" : "outline"}
+                        onClick={() => aplicarDescuento(descuento.porcentaje)}
+                        disabled={descuentoAplicado === descuento.porcentaje}
                       >
                         <Percent className="h-3 w-3 mr-1" />
-                        {promocion.nombre}
+                        {descuento.nombre}
                       </Button>
                     ))}
                   </div>
@@ -566,7 +559,6 @@ export default function POS() {
                     </div>
                   )}
 
-                  {/* Mostrar recargos/descuentos con colores apropiados */}
                   {obtenerRecargo() !== 0 && (
                     <div
                       className={`flex justify-between items-center ${obtenerRecargo() > 0 ? "text-orange-600" : "text-green-600"}`}
@@ -596,7 +588,6 @@ export default function POS() {
                       <SelectValue placeholder="Seleccionar medio de pago" />
                     </SelectTrigger>
                     <SelectContent>
-                      {/* Usar medios de pago del contexto y mostrar porcentajes */}
                       {mediosPago.map((medio) => (
                         <SelectItem key={medio.id} value={medio.id}>
                           {medio.nombre}

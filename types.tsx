@@ -22,35 +22,6 @@ export interface Descuento {
   porcentaje: number
 }
 
-export interface ProductoCombo {
-  id?: number
-  categoriaId?: string
-  cantidad: number
-  filtro?: string
-  nombre?: string
-}
-
-export interface ConfiguracionPromocion {
-  categorias?: string[]
-  productos?: ProductoCombo[]
-  precioCombo?: number
-  categoria?: string
-  cantidadMinima?: number
-  porcentaje?: number
-  acumulable?: boolean
-}
-
-export interface Promocion {
-  id: number
-  nombre: string
-  descripcion: string
-  activa: boolean
-  fechaInicio: string
-  fechaFin: string
-  tipo: string
-  configuracion?: ConfiguracionPromocion
-}
-
 export interface Venta {
   id: string
   fecha: string

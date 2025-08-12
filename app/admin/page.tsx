@@ -1102,14 +1102,16 @@ export default function AdminPage() {
                 />
               </div>
               <div>
-                <Label htmlFor="recargo-medio">Recargo (%)</Label>
+                <Label htmlFor="recargo-medio">Recargo/Descuento (%)</Label>
                 <Input
                   id="recargo-medio"
                   type="number"
+                  step="0.01"
                   value={formMedioPago.recargo}
                   onChange={(e) => setFormMedioPago((prev) => ({ ...prev, recargo: e.target.value }))}
                   placeholder="0"
                 />
+                <p className="text-xs text-gray-500 mt-1">Valores positivos = recargo, valores negativos = descuento</p>
               </div>
               <div className="flex gap-2">
                 <Button onClick={guardarMedioPago} className="flex-1">
