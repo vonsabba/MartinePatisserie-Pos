@@ -3,18 +3,80 @@
 import type React from "react"
 
 import { useState } from "react"
-import { useAppContext } from "@/contexts/app-context"
+import Image from "next/image"
+import Link from "next/link"
+
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Edit, Trash2, Search, ArrowUpDown, X, ArrowLeft, Users, Power } from "lucide-react"
-import Link from "next/link"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+  Trash2,
+  Edit,
+  Plus,
+  ArrowLeft,
+  Save,
+  X,
+  ArrowUpDown,
+  Search,
+  Settings,
+  Filter,
+  GripVertical,
+  Power,
+  PowerOff,
+  ImageIcon,
+} from "lucide-react"
+
+// Importar el nuevo modal
 import ModalPromocionAvanzado from "@/components/modal-promocion-avanzado"
+
+import { useAppContext } from "@/contexts/app-context"
+
+interface Producto {
+  id: number
+  nombre: string
+  precio: number
+  imagen?: string
+}
+
+interface MedioPago {
+  id: string
+  nombre: string
+  recargo: number
+}
+
+interface Descuento {
+  id: number
+  nombre: string
+  porcentaje: number
+}
+
+interface Promocion {
+  id: number
+  nombre: string
+  descripcion: string
+  activa: boolean
+  fechaInicio: string
+  fechaFin: string
+  tipo: string
+  configuracion?: any // Configuración específica según el tipo
+}
+
+interface Usuario {
+  id: number
+  nombre: string
+  rol: string
+}
 
 export default function AdminPage() {
   const {
@@ -22,525 +84,106 @@ export default function AdminPage() {
     setProductos,
     promociones,
     setPromociones,
-    mediosPago,
-    setMediosPago,
+    mediosPago, // usando mediosPago del contexto
+    setMediosPago, // usando setMediosPago del contexto
     descuentos,
     setDescuentos,
     usuarios,
     setUsuarios,
   } = useAppContext()
 
-  // Estados para productos
-  const [busquedaProductos, setBusquedaProductos] = useState("")
-  const [ordenProductos, setOrdenProductos] = useState<"asc" | "desc">("asc")
-  const [categoriasVisibles, setCategoriasVisibles] = useState<string[]>(Object.keys(productos))
-  const [modalProductoAbierto, setModalProductoAbierto] = useState(false)
-  const [modalCategoriaAbierto, setModalCategoriaAbierto] = useState(false)
+  // Estados para UI
+  const [tabActiva, setTabActiva] = useState("productos")
+  const [modalProducto, setModalProducto] = useState(false)
+  const [modalPromocion, setModalPromocion] = useState(false)
+  const [modalMedioPago, setModalMedioPago] = useState(false)
+  const [modalDescuento, setModalDescuento] = useState(false)
+  const [modalUsuario, setModalUsuario] = useState(false)
+
+  // Estados para formularios
+  const [formProducto, setFormProducto] = useState({ id: "", nombre: "", precio: "", categoria: "", imagen: "" })
+  const [formMedioPago, setFormMedioPago] = useState({ id: "", nombre: "", recargo: "" })
+  const [formDescuento, setFormDescuento] = useState({ id: "", nombre: "", porcentaje: "" })
+  const [formUsuario, setFormUsuario] = useState({ id: "", nombre: "", rol: "" })
+
+  // Estados para edición
   const [productoEditando, setProductoEditando] = useState<any>(null)
-  const [categoriaEditando, setCategoriaEditando] = useState<string>("")
-  const [formProducto, setFormProducto] = useState({
-    nombre: "",
-    precio: "",
-    categoria: "",
-    imagen: "",
-  })
-  const [formCategoria, setFormCategoria] = useState({
-    nombre: "",
-    orden: "",
-  })
+  const [medioPagoEditando, setMedioPagoEditando] = useState<MedioPago | null>(null)
+  const [descuentoEditando, setDescuentoEditando] = useState<Descuento | null>(null)
+  const [usuarioEditando, setUsuarioEditando] = useState<Usuario | null>(null)
 
-  // Estados para medios de pago
+  // Estados para búsqueda y filtros
+  const [busquedaProductos, setBusquedaProductos] = useState("")
   const [busquedaMedios, setBusquedaMedios] = useState("")
-  const [ordenMedios, setOrdenMedios] = useState<"asc" | "desc">("asc")
-  const [modalMedioPagoAbierto, setModalMedioPagoAbierto] = useState(false)
-  const [medioPagoEditando, setMedioPagoEditando] = useState<any>(null)
-  const [formMedioPago, setFormMedioPago] = useState({
-    nombre: "",
-    recargo: "",
-  })
-
-  // Estados para descuentos
   const [busquedaDescuentos, setBusquedaDescuentos] = useState("")
+  const [busquedaUsuarios, setBusquedaUsuarios] = useState("")
+  const [categoriaFiltro, setCategoriaFiltro] = useState("todas")
+  const [ordenProductos, setOrdenProductos] = useState<"asc" | "desc">("asc")
+  const [ordenMedios, setOrdenMedios] = useState<"asc" | "desc">("asc")
   const [ordenDescuentos, setOrdenDescuentos] = useState<"asc" | "desc">("asc")
-  const [modalDescuentoAbierto, setModalDescuentoAbierto] = useState(false)
-  const [descuentoEditando, setDescuentoEditando] = useState<any>(null)
-  const [formDescuento, setFormDescuento] = useState({
-    nombre: "",
-    porcentaje: "",
-  })
+  const [ordenUsuarios, setOrdenUsuarios] = useState<"asc" | "desc">("asc")
 
-  // Estados para promociones
+  // const [mediosPago, setMediosPago] = useState<MedioPago[]>([])
+
+  const [modalCategoria, setModalCategoria] = useState(false)
+  const [categoriaEditando, setCategoriaEditando] = useState<{ key: string; nombre: string } | null>(null)
+  const [formCategoria, setFormCategoria] = useState({ key: "", nombre: "" })
   const [busquedaPromociones, setBusquedaPromociones] = useState("")
   const [ordenPromociones, setOrdenPromociones] = useState<"asc" | "desc">("asc")
-  const [modalPromocionAbierto, setModalPromocionAbierto] = useState(false)
-  const [promocionEditando, setPromocionEditando] = useState<any>(null)
-  const [formPromocion, setFormPromocion] = useState({
-    nombre: "",
-    descripcion: "",
-    fechaInicio: "",
-    fechaFin: "",
-    tipo: "",
-    activa: true,
-  })
-
-  const [modalPromocionAvanzadoAbierto, setModalPromocionAvanzadoAbierto] = useState(false)
-
-  // Estados para usuarios
-  const [busquedaUsuarios, setBusquedaUsuarios] = useState("")
-  const [ordenUsuarios, setOrdenUsuarios] = useState<"asc" | "desc">("asc")
-  const [modalUsuarioAbierto, setModalUsuarioAbierto] = useState(false)
-  const [usuarioEditando, setUsuarioEditando] = useState<any>(null)
-  const [formUsuario, setFormUsuario] = useState({
-    nombre: "",
-    contraseña: "",
-    rol: "empleado" as "administrador" | "empleado",
-  })
+  const [categoriasVisibles, setCategoriasVisibles] = useState<string[]>(Object.keys(productos))
+  const [draggedCategory, setDraggedCategory] = useState<string | null>(null)
 
   // Funciones para productos
-  const filtrarProductos = () => {
-    const productosFiltrados: any = {}
-
-    Object.entries(productos).forEach(([key, categoria]: [string, any]) => {
-      if (categoriasVisibles.includes(key)) {
-        const productosDeLaCategoria = categoria.productos.filter((producto: any) =>
-          producto.nombre.toLowerCase().includes(busquedaProductos.toLowerCase()),
-        )
-
-        if (productosDeLaCategoria.length > 0) {
-          productosFiltrados[key] = {
-            ...categoria,
-            productos: productosDeLaCategoria.sort((a: any, b: any) => {
-              if (ordenProductos === "asc") {
-                return a.nombre.localeCompare(b.nombre)
-              } else {
-                return b.nombre.localeCompare(a.nombre)
-              }
-            }),
-          }
-        }
-      }
-    })
-
-    return productosFiltrados
-  }
-
-  const toggleCategoria = (categoria: string) => {
-    setCategoriasVisibles((prev) =>
-      prev.includes(categoria) ? prev.filter((c) => c !== categoria) : [...prev, categoria],
-    )
-  }
-
-  const toggleTodasCategorias = () => {
-    if (categoriasVisibles.length === Object.keys(productos).length) {
-      setCategoriasVisibles([])
-    } else {
-      setCategoriasVisibles(Object.keys(productos))
-    }
-  }
-
-  const abrirModalProducto = (producto?: any, categoria?: string) => {
-    if (producto) {
+  const abrirModalProducto = (producto?: Producto, categoria?: string) => {
+    if (producto && categoria) {
       setProductoEditando(producto)
       setFormProducto({
         nombre: producto.nombre,
         precio: producto.precio.toString(),
-        categoria: categoria || "",
+        categoria,
         imagen: producto.imagen || "",
+        id: producto.id.toString(),
       })
     } else {
       setProductoEditando(null)
-      setFormProducto({
-        nombre: "",
-        precio: "",
-        categoria: "",
-        imagen: "",
-      })
+      setFormProducto({ nombre: "", precio: "", categoria: "", imagen: "", id: "" })
     }
-    setModalProductoAbierto(true)
-  }
-
-  const abrirModalCategoria = (categoria?: string) => {
-    if (categoria) {
-      setCategoriaEditando(categoria)
-      setFormCategoria({
-        nombre: productos[categoria].nombre,
-        orden: productos[categoria].orden?.toString() || "",
-      })
-    } else {
-      setCategoriaEditando("")
-      setFormCategoria({
-        nombre: "",
-        orden: "",
-      })
-    }
-    setModalCategoriaAbierto(true)
+    setModalProducto(true)
   }
 
   const guardarProducto = () => {
-    if (!formProducto.nombre.trim() || !formProducto.precio.trim() || !formProducto.categoria.trim()) {
-      alert("Por favor complete todos los campos obligatorios")
-      return
+    if (!formProducto.nombre || !formProducto.precio || !formProducto.categoria) return
+
+    const nuevoProducto: Producto = {
+      id: productoEditando?.id || Date.now(),
+      nombre: formProducto.nombre,
+      precio: Number.parseFloat(formProducto.precio),
+      imagen: formProducto.imagen || undefined,
     }
 
-    const precio = Number.parseFloat(formProducto.precio)
-    if (isNaN(precio) || precio <= 0) {
-      alert("El precio debe ser un número válido mayor a 0")
-      return
-    }
+    setProductos((prev) => {
+      const nuevosProductos = { ...prev }
 
-    const productosActualizados = { ...productos }
-
-    if (productoEditando) {
-      // Editar producto existente
-      Object.keys(productosActualizados).forEach((categoriaKey) => {
-        productosActualizados[categoriaKey].productos = productosActualizados[categoriaKey].productos.map((p: any) =>
-          p.id === productoEditando.id ? { ...p, nombre: formProducto.nombre, precio, imagen: formProducto.imagen } : p,
-        )
-      })
-    } else {
-      // Crear nuevo producto
-      const nuevoProducto = {
-        id: Date.now(),
-        nombre: formProducto.nombre,
-        precio,
-        imagen: formProducto.imagen,
-      }
-
-      if (!productosActualizados[formProducto.categoria]) {
-        productosActualizados[formProducto.categoria] = {
-          nombre: formProducto.categoria,
-          orden: Object.keys(productosActualizados).length + 1,
-          productos: [],
+      if (productoEditando) {
+        // Editar producto existente
+        Object.keys(nuevosProductos).forEach((cat) => {
+          nuevosProductos[cat as keyof typeof nuevosProductos].productos = nuevosProductos[
+            cat as keyof typeof nuevosProductos
+          ].productos.map((p) => (p.id === productoEditando.id ? nuevoProducto : p))
+        })
+      } else {
+        // Agregar nuevo producto
+        if (nuevosProductos[formProducto.categoria as keyof typeof nuevosProductos]) {
+          nuevosProductos[formProducto.categoria as keyof typeof nuevosProductos].productos.push(nuevoProducto)
         }
       }
 
-      productosActualizados[formProducto.categoria].productos.push(nuevoProducto)
-    }
+      return nuevosProductos
+    })
 
-    setProductos(productosActualizados)
-    setModalProductoAbierto(false)
+    setModalProducto(false)
+    setFormProducto({ nombre: "", precio: "", categoria: "", imagen: "", id: "" })
     setProductoEditando(null)
-    setFormProducto({ nombre: "", precio: "", categoria: "", imagen: "" })
-  }
-
-  const eliminarProducto = (id: number) => {
-    if (confirm("¿Está seguro de que desea eliminar este producto?")) {
-      const productosActualizados = { ...productos }
-      Object.keys(productosActualizados).forEach((categoriaKey) => {
-        productosActualizados[categoriaKey].productos = productosActualizados[categoriaKey].productos.filter(
-          (p: any) => p.id !== id,
-        )
-      })
-      setProductos(productosActualizados)
-    }
-  }
-
-  // Funciones para medios de pago
-  const filtrarMediosPago = () => {
-    const mediosFiltrados = mediosPago.filter((medio) =>
-      medio.nombre.toLowerCase().includes(busquedaMedios.toLowerCase()),
-    )
-
-    mediosFiltrados.sort((a, b) => {
-      if (ordenMedios === "asc") {
-        return a.nombre.localeCompare(b.nombre)
-      } else {
-        return b.nombre.localeCompare(a.nombre)
-      }
-    })
-
-    return mediosFiltrados
-  }
-
-  const abrirModalMedioPago = (medio?: any) => {
-    if (medio) {
-      setMedioPagoEditando(medio)
-      setFormMedioPago({
-        nombre: medio.nombre,
-        recargo: medio.recargo.toString(),
-      })
-    } else {
-      setMedioPagoEditando(null)
-      setFormMedioPago({
-        nombre: "",
-        recargo: "",
-      })
-    }
-    setModalMedioPagoAbierto(true)
-  }
-
-  const guardarMedioPago = () => {
-    if (!formMedioPago.nombre.trim() || !formMedioPago.recargo.trim()) {
-      alert("Por favor complete todos los campos")
-      return
-    }
-
-    const recargo = Number.parseFloat(formMedioPago.recargo)
-    if (isNaN(recargo)) {
-      alert("El recargo debe ser un número válido")
-      return
-    }
-
-    if (medioPagoEditando) {
-      // Editar medio existente
-      const mediosActualizados = mediosPago.map((medio) =>
-        medio.id === medioPagoEditando.id ? { ...medio, nombre: formMedioPago.nombre, recargo } : medio,
-      )
-      setMediosPago(mediosActualizados)
-    } else {
-      // Crear nuevo medio
-      const nuevoMedio = {
-        id: Date.now().toString(),
-        nombre: formMedioPago.nombre,
-        recargo,
-      }
-      setMediosPago([...mediosPago, nuevoMedio])
-    }
-
-    setModalMedioPagoAbierto(false)
-    setMedioPagoEditando(null)
-    setFormMedioPago({ nombre: "", recargo: "" })
-  }
-
-  const eliminarMedioPago = (id: string) => {
-    if (confirm("¿Está seguro de que desea eliminar este medio de pago?")) {
-      setMediosPago(mediosPago.filter((medio) => medio.id !== id))
-    }
-  }
-
-  // Funciones para descuentos
-  const filtrarDescuentos = () => {
-    const descuentosFiltrados = descuentos.filter((descuento) =>
-      descuento.nombre.toLowerCase().includes(busquedaDescuentos.toLowerCase()),
-    )
-
-    descuentosFiltrados.sort((a, b) => {
-      if (ordenDescuentos === "asc") {
-        return a.nombre.localeCompare(b.nombre)
-      } else {
-        return b.nombre.localeCompare(a.nombre)
-      }
-    })
-
-    return descuentosFiltrados
-  }
-
-  const abrirModalDescuento = (descuento?: any) => {
-    if (descuento) {
-      setDescuentoEditando(descuento)
-      setFormDescuento({
-        nombre: descuento.nombre,
-        porcentaje: descuento.porcentaje.toString(),
-      })
-    } else {
-      setDescuentoEditando(null)
-      setFormDescuento({
-        nombre: "",
-        porcentaje: "",
-      })
-    }
-    setModalDescuentoAbierto(true)
-  }
-
-  const guardarDescuento = () => {
-    if (!formDescuento.nombre.trim() || !formDescuento.porcentaje.trim()) {
-      alert("Por favor complete todos los campos")
-      return
-    }
-
-    const porcentaje = Number.parseFloat(formDescuento.porcentaje)
-    if (isNaN(porcentaje) || porcentaje <= 0) {
-      alert("El porcentaje debe ser un número válido mayor a 0")
-      return
-    }
-
-    if (descuentoEditando) {
-      // Editar descuento existente
-      const descuentosActualizados = descuentos.map((descuento) =>
-        descuento.id === descuentoEditando.id ? { ...descuento, nombre: formDescuento.nombre, porcentaje } : descuento,
-      )
-      setDescuentos(descuentosActualizados)
-    } else {
-      // Crear nuevo descuento
-      const nuevoDescuento = {
-        id: Date.now(),
-        nombre: formDescuento.nombre,
-        porcentaje,
-      }
-      setDescuentos([...descuentos, nuevoDescuento])
-    }
-
-    setModalDescuentoAbierto(false)
-    setDescuentoEditando(null)
-    setFormDescuento({ nombre: "", porcentaje: "" })
-  }
-
-  const eliminarDescuento = (id: number) => {
-    if (confirm("¿Está seguro de que desea eliminar este descuento?")) {
-      setDescuentos(descuentos.filter((descuento) => descuento.id !== id))
-    }
-  }
-
-  // Funciones para promociones
-  const filtrarPromociones = () => {
-    const promocionesFiltradas = promociones.filter((promocion) =>
-      promocion.nombre.toLowerCase().includes(busquedaPromociones.toLowerCase()),
-    )
-
-    promocionesFiltradas.sort((a, b) => {
-      if (ordenPromociones === "asc") {
-        return a.nombre.localeCompare(b.nombre)
-      } else {
-        return b.nombre.localeCompare(a.nombre)
-      }
-    })
-
-    return promocionesFiltradas
-  }
-
-  const abrirModalPromocion = (promocion?: any) => {
-    if (promocion) {
-      setPromocionEditando(promocion)
-    } else {
-      setPromocionEditando(null)
-    }
-    setModalPromocionAvanzadoAbierto(true)
-  }
-
-  const guardarPromocionAvanzada = (promocionData: any) => {
-    if (promocionEditando) {
-      // Editar promoción existente
-      const promocionesActualizadas = promociones.map((promocion) =>
-        promocion.id === promocionEditando.id ? { ...promocion, ...promocionData } : promocion,
-      )
-      setPromociones(promocionesActualizadas)
-    } else {
-      // Crear nueva promoción
-      const nuevaPromocion = {
-        id: Date.now(),
-        ...promocionData,
-      }
-      setPromociones([...promociones, nuevaPromocion])
-    }
-    setPromocionEditando(null)
-  }
-
-  const guardarPromocion = () => {
-    if (!formPromocion.nombre.trim() || !formPromocion.descripcion.trim()) {
-      alert("Por favor complete todos los campos obligatorios")
-      return
-    }
-
-    if (promocionEditando) {
-      // Editar promoción existente
-      const promocionesActualizadas = promociones.map((promocion) =>
-        promocion.id === promocionEditando.id ? { ...promocion, ...formPromocion } : promocion,
-      )
-      setPromociones(promocionesActualizadas)
-    } else {
-      // Crear nueva promoción
-      const nuevaPromocion = {
-        id: Date.now(),
-        ...formPromocion,
-      }
-      setPromociones([...promociones, nuevaPromocion])
-    }
-
-    setModalPromocionAbierto(false)
-    setPromocionEditando(null)
-    setFormPromocion({
-      nombre: "",
-      descripcion: "",
-      fechaInicio: "",
-      fechaFin: "",
-      tipo: "",
-      activa: true,
-    })
-  }
-
-  const eliminarPromocion = (id: number) => {
-    if (confirm("¿Está seguro de que desea eliminar esta promoción?")) {
-      setPromociones(promociones.filter((promocion) => promocion.id !== id))
-    }
-  }
-
-  const togglePromocion = (id: number) => {
-    const promocionesActualizadas = promociones.map((promocion) =>
-      promocion.id === id ? { ...promocion, activa: !promocion.activa } : promocion,
-    )
-    setPromociones(promocionesActualizadas)
-  }
-
-  // Funciones para usuarios
-  const filtrarUsuarios = () => {
-    const usuariosFiltrados = usuarios.filter((usuario) =>
-      usuario.nombre.toLowerCase().includes(busquedaUsuarios.toLowerCase()),
-    )
-
-    usuariosFiltrados.sort((a, b) => {
-      if (ordenUsuarios === "asc") {
-        return a.nombre.localeCompare(b.nombre)
-      } else {
-        return b.nombre.localeCompare(a.nombre)
-      }
-    })
-
-    return usuariosFiltrados
-  }
-
-  const abrirModalUsuario = (usuario?: any) => {
-    if (usuario) {
-      setUsuarioEditando(usuario)
-      setFormUsuario({
-        nombre: usuario.nombre,
-        contraseña: usuario.contraseña,
-        rol: usuario.rol,
-      })
-    } else {
-      setUsuarioEditando(null)
-      setFormUsuario({
-        nombre: "",
-        contraseña: "",
-        rol: "empleado",
-      })
-    }
-    setModalUsuarioAbierto(true)
-  }
-
-  const guardarUsuario = () => {
-    if (!formUsuario.nombre.trim() || !formUsuario.contraseña.trim()) {
-      alert("Por favor complete todos los campos")
-      return
-    }
-
-    if (usuarioEditando) {
-      // Editar usuario existente
-      const usuariosActualizados = usuarios.map((usuario) =>
-        usuario.id === usuarioEditando.id ? { ...usuario, ...formUsuario } : usuario,
-      )
-      setUsuarios(usuariosActualizados)
-    } else {
-      // Crear nuevo usuario
-      const nuevoUsuario = {
-        id: Date.now(),
-        ...formUsuario,
-      }
-      setUsuarios([...usuarios, nuevoUsuario])
-    }
-
-    setModalUsuarioAbierto(false)
-    setUsuarioEditando(null)
-    setFormUsuario({
-      nombre: "",
-      contraseña: "",
-      rol: "empleado",
-    })
-  }
-
-  const eliminarUsuario = (id: number) => {
-    if (confirm("¿Está seguro de que desea eliminar este usuario?")) {
-      setUsuarios(usuarios.filter((usuario) => usuario.id !== id))
-    }
   }
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -548,38 +191,439 @@ export default function AdminPage() {
     if (file) {
       const reader = new FileReader()
       reader.onload = (event) => {
-        setFormProducto((prev) => ({
-          ...prev,
-          imagen: event.target?.result as string,
-        }))
+        const result = event.target?.result as string
+        setFormProducto((prev) => ({ ...prev, imagen: result }))
       }
       reader.readAsDataURL(file)
     }
   }
 
+  const eliminarProducto = (id: number) => {
+    setProductos((prev) => {
+      const nuevosProductos = { ...prev }
+      Object.keys(nuevosProductos).forEach((cat) => {
+        nuevosProductos[cat as keyof typeof nuevosProductos].productos = nuevosProductos[
+          cat as keyof typeof nuevosProductos
+        ].productos.filter((p) => p.id !== id)
+      })
+      return nuevosProductos
+    })
+  }
+
+  // Funciones para medios de pago
+  const abrirModalMedioPago = (medio?: MedioPago) => {
+    if (medio) {
+      setMedioPagoEditando(medio)
+      setFormMedioPago({
+        id: medio.id,
+        nombre: medio.nombre,
+        recargo: medio.recargo.toString(),
+      })
+    } else {
+      setMedioPagoEditando(null)
+      setFormMedioPago({ id: "", nombre: "", recargo: "" })
+    }
+    setModalMedioPago(true)
+  }
+
+  const guardarMedioPago = () => {
+    if (!formMedioPago.nombre || !formMedioPago.recargo) return
+
+    const nuevoMedio: MedioPago = {
+      id: formMedioPago.id || formMedioPago.nombre.toLowerCase().replace(/\s+/g, ""),
+      nombre: formMedioPago.nombre,
+      recargo: Number.parseFloat(formMedioPago.recargo),
+    }
+
+    setMediosPago((prev) => {
+      if (medioPagoEditando) {
+        return prev.map((m) => (m.id === medioPagoEditando.id ? nuevoMedio : m))
+      }
+      return [...prev, nuevoMedio]
+    })
+
+    setModalMedioPago(false)
+    setFormMedioPago({ id: "", nombre: "", recargo: "" })
+    setMedioPagoEditando(null)
+  }
+
+  const eliminarMedioPago = (id: string) => {
+    setMediosPago((prev) => prev.filter((m) => m.id !== id))
+  }
+
+  // Funciones para descuentos
+  const abrirModalDescuento = (descuento?: Descuento) => {
+    if (descuento) {
+      setDescuentoEditando(descuento)
+      setFormDescuento({
+        nombre: descuento.nombre,
+        porcentaje: descuento.porcentaje.toString(),
+        id: descuento.id.toString(),
+      })
+    } else {
+      setDescuentoEditando(null)
+      setFormDescuento({ nombre: "", porcentaje: "", id: "" })
+    }
+    setModalDescuento(true)
+  }
+
+  const guardarDescuento = () => {
+    if (!formDescuento.nombre || !formDescuento.porcentaje) return
+
+    const nuevoDescuento: Descuento = {
+      id: descuentoEditando?.id || Date.now(),
+      nombre: formDescuento.nombre,
+      porcentaje: Number.parseFloat(formDescuento.porcentaje),
+    }
+
+    setDescuentos((prev) => {
+      if (descuentoEditando) {
+        return prev.map((d) => (d.id === descuentoEditando.id ? nuevoDescuento : d))
+      }
+      return [...prev, nuevoDescuento]
+    })
+
+    setModalDescuento(false)
+    setFormDescuento({ nombre: "", porcentaje: "", id: "" })
+    setDescuentoEditando(null)
+  }
+
+  const eliminarDescuento = (id: number) => {
+    setDescuentos((prev) => prev.filter((d) => d.id !== id))
+  }
+
+  // Funciones para categorías
+  const abrirModalCategoria = (categoria?: { key: string; nombre: string }) => {
+    if (categoria) {
+      setCategoriaEditando(categoria)
+      setFormCategoria({ key: categoria.key, nombre: categoria.nombre })
+    } else {
+      setCategoriaEditando(null)
+      setFormCategoria({ key: "", nombre: "" })
+    }
+    setModalCategoria(true)
+  }
+
+  const guardarCategoria = () => {
+    if (!formCategoria.nombre) return
+
+    const nuevaKey = formCategoria.key || formCategoria.nombre.toLowerCase().replace(/\s+/g, "")
+
+    setProductos((prev) => {
+      const nuevosProductos = { ...prev }
+
+      if (categoriaEditando) {
+        // Editar categoría existente
+        if (categoriaEditando.key !== nuevaKey) {
+          // Cambiar key de categoría
+          nuevosProductos[nuevaKey as keyof typeof nuevosProductos] = {
+            ...nuevosProductos[categoriaEditando.key as keyof typeof nuevosProductos],
+            nombre: formCategoria.nombre,
+          }
+          delete nuevosProductos[categoriaEditando.key as keyof typeof nuevosProductos]
+        } else {
+          // Solo cambiar nombre
+          nuevosProductos[categoriaEditando.key as keyof typeof nuevosProductos].nombre = formCategoria.nombre
+        }
+      } else {
+        // Agregar nueva categoría
+        const maxOrden = Math.max(...Object.values(nuevosProductos).map((cat) => cat.orden || 0))
+        nuevosProductos[nuevaKey as keyof typeof nuevosProductos] = {
+          nombre: formCategoria.nombre,
+          orden: maxOrden + 1,
+          productos: [],
+        }
+        setCategoriasVisibles((prev) => [...prev, nuevaKey])
+      }
+
+      return nuevosProductos
+    })
+
+    setModalCategoria(false)
+    setFormCategoria({ key: "", nombre: "" })
+    setCategoriaEditando(null)
+  }
+
+  const eliminarCategoria = (key: string) => {
+    const categoria = productos[key as keyof typeof productos]
+    if (categoria && categoria.productos.length > 0) {
+      alert("No se puede eliminar una categoría que tiene productos")
+      return
+    }
+
+    setProductos((prev) => {
+      const nuevosProductos = { ...prev }
+      delete nuevosProductos[key as keyof typeof nuevosProductos]
+      return nuevosProductos
+    })
+
+    setCategoriasVisibles((prev) => prev.filter((cat) => cat !== key))
+  }
+
+  // Funciones de drag and drop para categorías
+  const handleDragStart = (e: React.DragEvent, categoryKey: string) => {
+    setDraggedCategory(categoryKey)
+    e.dataTransfer.effectAllowed = "move"
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = "move"
+  }
+
+  const handleDrop = (e: React.DragEvent, targetKey: string) => {
+    e.preventDefault()
+
+    if (!draggedCategory || draggedCategory === targetKey) {
+      setDraggedCategory(null)
+      return
+    }
+
+    setProductos((prev) => {
+      const nuevosProductos = { ...prev }
+      const categorias = Object.entries(nuevosProductos).sort(([, a], [, b]) => (a.orden || 0) - (b.orden || 0))
+
+      const draggedIndex = categorias.findIndex(([key]) => key === draggedCategory)
+      const targetIndex = categorias.findIndex(([key]) => key === targetKey)
+
+      if (draggedIndex === -1 || targetIndex === -1) return prev
+
+      // Reordenar
+      const [draggedItem] = categorias.splice(draggedIndex, 1)
+      categorias.splice(targetIndex, 0, draggedItem)
+
+      // Actualizar órdenes
+      categorias.forEach(([key, categoria], index) => {
+        nuevosProductos[key as keyof typeof nuevosProductos].orden = index + 1
+      })
+
+      return nuevosProductos
+    })
+
+    setDraggedCategory(null)
+  }
+
+  // Funciones de filtrado y ordenamiento
+  const filtrarProductos = () => {
+    const productosFiltrados = {}
+
+    // Ordenar categorías por orden personalizado
+    const categoriasOrdenadas = Object.entries(productos)
+      .sort(([, a], [, b]) => (a.orden || 0) - (b.orden || 0))
+      .filter(([key]) => categoriasVisibles.includes(key))
+
+    categoriasOrdenadas.forEach(([key, categoria]) => {
+      productosFiltrados[key as keyof typeof productos] = {
+        nombre: categoria.nombre,
+        orden: categoria.orden,
+        productos: categoria.productos
+          .filter((p) => p.nombre.toLowerCase().includes(busquedaProductos.toLowerCase()))
+          .sort((a, b) => {
+            if (ordenProductos === "asc") {
+              return a.nombre.localeCompare(b.nombre)
+            }
+            return b.nombre.localeCompare(a.nombre)
+          }),
+      }
+    })
+
+    return productosFiltrados
+  }
+
+  const filtrarMediosPago = () => {
+    return mediosPago
+      .filter((m) => m.nombre.toLowerCase().includes(busquedaMedios.toLowerCase()))
+      .sort((a, b) => {
+        if (ordenMedios === "asc") {
+          return a.nombre.localeCompare(b.nombre)
+        }
+        return b.nombre.localeCompare(a.nombre)
+      })
+  }
+
+  const filtrarDescuentos = () => {
+    return descuentos
+      .filter((d) => d.nombre.toLowerCase().includes(busquedaDescuentos.toLowerCase()))
+      .sort((a, b) => {
+        if (ordenDescuentos === "asc") {
+          return a.nombre.localeCompare(b.nombre)
+        }
+        return b.nombre.localeCompare(a.nombre)
+      })
+  }
+
+  const filtrarUsuarios = () => {
+    return usuarios
+      .filter((u) => u.nombre.toLowerCase().includes(busquedaUsuarios.toLowerCase()))
+      .sort((a, b) => {
+        if (ordenUsuarios === "asc") {
+          return a.nombre.localeCompare(b.nombre)
+        }
+        return b.nombre.localeCompare(a.nombre)
+      })
+  }
+
+  const toggleCategoria = (key: string) => {
+    setCategoriasVisibles((prev) => (prev.includes(key) ? prev.filter((cat) => cat !== key) : [...prev, key]))
+  }
+
+  const toggleTodasCategorias = () => {
+    const todasLasCategorias = Object.keys(productos)
+    setCategoriasVisibles((prev) => (prev.length === todasLasCategorias.length ? [] : todasLasCategorias))
+  }
+
+  // Funciones para promociones
+  const abrirModalPromocion = (promocion?: Promocion) => {
+    if (promocion) {
+      // setPromocionEditando(promocion)
+      // setFormPromocion({
+      //   nombre: promocion.nombre,
+      //   descripcion: promocion.descripcion,
+      //   activa: promocion.activa,
+      //   fechaInicio: promocion.fechaInicio,
+      //   fechaFin: promocion.fechaFin,
+      //   tipo: promocion.tipo,
+      //   configuracion: promocion.configuracion || {},
+      // })
+    } else {
+      // setPromocionEditando(null)
+      // setFormPromocion({
+      //   nombre: "",
+      //   descripcion: "",
+      //   activa: true,
+      //   fechaInicio: "",
+      //   fechaFin: "",
+      //   tipo: "",
+      //   configuracion: {},
+      // })
+    }
+    setModalPromocion(true)
+  }
+
+  const guardarPromocion = () => {
+    // if (
+    //   !formPromocion.nombre ||
+    //   !formPromocion.descripcion ||
+    //   !formPromocion.fechaInicio ||
+    //   !formPromocion.fechaFin ||
+    //   !formPromocion.tipo
+    // )
+    //   return
+
+    // const nuevaPromocion: Promocion = {
+    //   id: promocionEditando?.id || Date.now(),
+    //   nombre: formPromocion.nombre,
+    //   descripcion: formPromocion.descripcion,
+    //   activa: formPromocion.activa,
+    //   fechaInicio: formPromocion.fechaInicio,
+    //   fechaFin: formPromocion.fechaFin,
+    //   tipo: formPromocion.tipo,
+    //   configuracion: formPromocion.configuracion,
+    // }
+
+    // setPromociones((prev) => {
+    //   if (promocionEditando) {
+    //     return prev.map((p) => (p.id === promocionEditando.id ? nuevaPromocion : p))
+    //   }
+    //   return [...prev, nuevaPromocion]
+    // })
+
+    setModalPromocion(false)
+    // setFormPromocion({
+    //   nombre: "",
+    //   descripcion: "",
+    //   activa: true,
+    //   fechaInicio: "",
+    //   fechaFin: "",
+    //   tipo: "",
+    //   configuracion: {},
+    // })
+    // setPromocionEditando(null)
+  }
+
+  const eliminarPromocion = (id: number) => {
+    setPromociones((prev) => prev.filter((p) => p.id !== id))
+  }
+
+  const togglePromocion = (id: number) => {
+    setPromociones((prev) => prev.map((p) => (p.id === id ? { ...p, activa: !p.activa } : p)))
+  }
+
+  const filtrarPromociones = () => {
+    return promociones
+      .filter(
+        (p) =>
+          p.nombre.toLowerCase().includes(busquedaPromociones.toLowerCase()) ||
+          p.descripcion.toLowerCase().includes(busquedaPromociones.toLowerCase()),
+      )
+      .sort((a, b) => {
+        if (ordenPromociones === "asc") {
+          return a.nombre.localeCompare(b.nombre)
+        }
+        return b.nombre.localeCompare(a.nombre)
+      })
+  }
+
+  // Funciones para usuarios
+  const abrirModalUsuario = (usuario?: Usuario) => {
+    if (usuario) {
+      setUsuarioEditando(usuario)
+      setFormUsuario({
+        id: usuario.id.toString(),
+        nombre: usuario.nombre,
+        rol: usuario.rol,
+      })
+    } else {
+      setUsuarioEditando(null)
+      setFormUsuario({ id: "", nombre: "", rol: "" })
+    }
+    setModalUsuario(true)
+  }
+
+  const guardarUsuario = () => {
+    if (!formUsuario.nombre || !formUsuario.rol) return
+
+    const nuevoUsuario: Usuario = {
+      id: usuarioEditando?.id || Date.now(),
+      nombre: formUsuario.nombre,
+      rol: formUsuario.rol,
+    }
+
+    setUsuarios((prev) => {
+      if (usuarioEditando) {
+        return prev.map((u) => (u.id === usuarioEditando.id ? nuevoUsuario : u))
+      }
+      return [...prev, nuevoUsuario]
+    })
+
+    setModalUsuario(false)
+    setFormUsuario({ id: "", nombre: "", rol: "" })
+    setUsuarioEditando(null)
+  }
+
+  const eliminarUsuario = (id: number) => {
+    setUsuarios((prev) => prev.filter((u) => u.id !== id))
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-7xl mx-auto">
+        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-            <Link href="/">
-              <Button variant="outline" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Volver al POS
-              </Button>
-            </Link>
-            <div className="flex items-center gap-3">
-              <img src="/mp-logo.svg" alt="MP Logo" className="h-12 w-12" />
-              <div>
-                <h1 className="text-3xl font-bold text-amber-600">Martine Pâtisserie</h1>
-                <p className="text-gray-600">Panel de Administración</p>
-              </div>
-            </div>
+            <Image src="/mp-logo.svg" alt="MP Logo" width={150} height={60} className="h-12 w-auto" />
+            <h1 className="text-2xl font-bold">Panel de Administración</h1>
           </div>
+          <Link href="/">
+            <Button variant="outline">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Volver al POS
+            </Button>
+          </Link>
         </div>
 
         <Tabs defaultValue="productos" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="productos">Productos</TabsTrigger>
             <TabsTrigger value="pagos">Medios de Pago</TabsTrigger>
             <TabsTrigger value="descuentos">Descuentos</TabsTrigger>
@@ -587,13 +631,14 @@ export default function AdminPage() {
             <TabsTrigger value="usuarios">Usuarios</TabsTrigger>
           </TabsList>
 
+          {/* Tab de Productos */}
           <TabsContent value="productos">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Gestión de Productos</CardTitle>
                 <div className="flex gap-2">
                   <Button variant="outline" onClick={() => abrirModalCategoria()}>
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Settings className="h-4 w-4 mr-2" />
                     Categorías
                   </Button>
                   <Button onClick={() => abrirModalProducto()}>
@@ -603,6 +648,7 @@ export default function AdminPage() {
                 </div>
               </CardHeader>
               <CardContent>
+                {/* Controles de búsqueda, ordenamiento y filtros */}
                 <div className="flex gap-4 mb-6">
                   <div className="flex-1 relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -630,72 +676,112 @@ export default function AdminPage() {
                     <ArrowUpDown className="h-4 w-4 mr-2" />
                     {ordenProductos === "asc" ? "A-Z" : "Z-A"}
                   </Button>
-                  <Button variant="outline" onClick={toggleTodasCategorias}>
-                    Categorías ({categoriasVisibles.length}/{Object.keys(productos).length})
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline">
+                        <Filter className="h-4 w-4 mr-2" />
+                        Categorías ({categoriasVisibles.length}/{Object.keys(productos).length})
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56">
+                      <DropdownMenuCheckboxItem
+                        checked={categoriasVisibles.length === Object.keys(productos).length}
+                        onCheckedChange={toggleTodasCategorias}
+                        className="font-medium"
+                      >
+                        Todas las categorías
+                      </DropdownMenuCheckboxItem>
+                      {Object.entries(productos)
+                        .sort(([, a], [, b]) => (a.orden || 0) - (b.orden || 0))
+                        .map(([key, categoria]) => (
+                          <DropdownMenuCheckboxItem
+                            key={key}
+                            checked={categoriasVisibles.includes(key)}
+                            onCheckedChange={() => toggleCategoria(key)}
+                          >
+                            {categoria.nombre} ({categoria.productos.length})
+                          </DropdownMenuCheckboxItem>
+                        ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
 
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {Object.entries(productos).map(([key, categoria]: [string, any]) => (
-                    <Badge
-                      key={key}
-                      variant={categoriasVisibles.includes(key) ? "default" : "outline"}
-                      className="cursor-pointer"
-                      onClick={() => toggleCategoria(key)}
-                    >
-                      {categoria.nombre} ({categoria.productos.length})
-                    </Badge>
-                  ))}
-                </div>
-
-                {Object.entries(filtrarProductos()).map(([categoriaKey, categoria]: [string, any]) => (
-                  <div key={categoriaKey} className="mb-8">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold text-blue-600">
+                <div className="space-y-6">
+                  {Object.entries(filtrarProductos()).map(([categoriaKey, categoria]) => (
+                    <div key={categoriaKey} className="space-y-3">
+                      <h3 className="text-lg font-semibold text-blue-700 border-b pb-2">
                         {categoria.nombre} ({categoria.productos.length} productos)
                       </h3>
-                      <Button variant="outline" size="sm" onClick={() => abrirModalCategoria(categoriaKey)}>
-                        <Edit className="h-3 w-3 mr-1" />
-                        Editar Categoría
-                      </Button>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {categoria.productos.map((producto: any) => (
-                        <div key={producto.id} className="p-4 border rounded-lg bg-white">
-                          <div className="flex justify-between items-start mb-2">
-                            <div className="flex items-center gap-2">
-                              {producto.imagen && (
-                                <img
-                                  src={producto.imagen || "/placeholder.svg"}
-                                  alt={producto.nombre}
-                                  className="w-8 h-8 object-cover rounded"
-                                />
-                              )}
-                              <h4 className="font-medium">{producto.nombre}</h4>
-                            </div>
-                            <div className="flex gap-1">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => abrirModalProducto(producto, categoriaKey)}
+                      {categoria.productos.length === 0 ? (
+                        <p className="text-gray-500 text-sm italic">
+                          {busquedaProductos
+                            ? "No hay productos que coincidan con la búsqueda"
+                            : "No hay productos en esta categoría"}
+                        </p>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
+                          {filtrarProductos()[categoriaKey as keyof typeof filtrarProductos].productos.map(
+                            (producto) => (
+                              <div
+                                key={producto.id}
+                                className="p-3 border rounded-lg hover:bg-gray-50 transition-colors"
                               >
-                                <Edit className="h-3 w-3" />
-                              </Button>
-                              <Button size="sm" variant="ghost" onClick={() => eliminarProducto(producto.id)}>
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </div>
-                          <p className="text-lg font-semibold text-green-600">${producto.precio}</p>
+                                <div className="flex items-center justify-between">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-3 mb-2">
+                                      {producto.imagen ? (
+                                        <div className="w-10 h-10 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
+                                          <Image
+                                            src={producto.imagen || "/placeholder.svg"}
+                                            alt={producto.nombre}
+                                            width={40}
+                                            height={40}
+                                            className="w-full h-full object-cover"
+                                          />
+                                        </div>
+                                      ) : (
+                                        <div className="w-10 h-10 rounded-md bg-gray-100 flex items-center justify-center flex-shrink-0">
+                                          <ImageIcon className="h-5 w-5 text-gray-400" />
+                                        </div>
+                                      )}
+                                      <div className="flex-1 min-w-0">
+                                        <h3 className="font-medium text-sm truncate">{producto.nombre}</h3>
+                                        <p className="text-lg font-bold text-green-600">
+                                          ${producto.precio.toLocaleString()}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex gap-1">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => abrirModalProducto(producto, categoriaKey)}
+                                    >
+                                      <Edit className="h-3 w-3" />
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="destructive"
+                                      onClick={() => eliminarProducto(producto.id)}
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            ),
+                          )}
                         </div>
-                      ))}
+                      )}
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
 
+          {/* Tab de Medios de Pago */}
           <TabsContent value="pagos">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
@@ -706,6 +792,7 @@ export default function AdminPage() {
                 </Button>
               </CardHeader>
               <CardContent>
+                {/* Controles de búsqueda y ordenamiento */}
                 <div className="flex gap-4 mb-6">
                   <div className="flex-1 relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -754,6 +841,7 @@ export default function AdminPage() {
             </Card>
           </TabsContent>
 
+          {/* Tab de Descuentos */}
           <TabsContent value="descuentos">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
@@ -764,6 +852,7 @@ export default function AdminPage() {
                 </Button>
               </CardHeader>
               <CardContent>
+                {/* Controles de búsqueda y ordenamiento */}
                 <div className="flex gap-4 mb-6">
                   <div className="flex-1 relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -815,6 +904,7 @@ export default function AdminPage() {
             </Card>
           </TabsContent>
 
+          {/* Tab de Promociones */}
           <TabsContent value="promociones">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
@@ -825,6 +915,7 @@ export default function AdminPage() {
                 </Button>
               </CardHeader>
               <CardContent>
+                {/* Controles de búsqueda y ordenamiento */}
                 <div className="flex gap-4 mb-6">
                   <div className="flex-1 relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -854,94 +945,117 @@ export default function AdminPage() {
                   </Button>
                 </div>
 
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-lg font-semibold text-green-600 mb-4">
-                      Promociones Activas ({filtrarPromociones().filter((p) => p.activa).length})
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {filtrarPromociones()
-                        .filter((promocion) => promocion.activa)
-                        .map((promocion) => (
-                          <div key={promocion.id} className="p-4 border rounded-lg bg-green-50 border-green-200">
-                            <div className="flex justify-between items-start mb-2">
-                              <h4 className="font-medium">{promocion.nombre}</h4>
-                              <div className="flex gap-1">
-                                <Button size="sm" variant="ghost" onClick={() => abrirModalPromocion(promocion)}>
-                                  <Edit className="h-3 w-3" />
-                                </Button>
-                                <Button size="sm" variant="ghost" onClick={() => togglePromocion(promocion.id)}>
-                                  <Power className="h-3 w-3" />
-                                </Button>
-                                <Button size="sm" variant="ghost" onClick={() => eliminarPromocion(promocion.id)}>
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
+                {/* Promociones Activas */}
+                <div className="space-y-4 mb-8">
+                  <h3 className="text-lg font-semibold text-green-700 border-b pb-2">
+                    Promociones Activas ({filtrarPromociones().filter((p) => p.activa).length})
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {filtrarPromociones()
+                      .filter((p) => p.activa)
+                      .map((promocion) => (
+                        <div key={promocion.id} className="p-4 border-2 border-green-200 rounded-lg bg-white">
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex-1">
+                              <h4 className="font-medium text-green-800">{promocion.nombre}</h4>
+                              <p className="text-sm text-gray-600 mt-1">{promocion.descripcion}</p>
+                              <div className="flex gap-4 mt-2 text-xs text-gray-500">
+                                <span>Desde: {new Date(promocion.fechaInicio).toLocaleDateString()}</span>
+                                <span>Hasta: {new Date(promocion.fechaFin).toLocaleDateString()}</span>
                               </div>
                             </div>
-                            <p className="text-sm text-gray-600 mb-2">{promocion.descripcion}</p>
-                            <div className="flex justify-between items-center text-xs text-gray-500">
-                              <span>Desde: {promocion.fechaInicio}</span>
-                              <span>Hasta: {promocion.fechaFin}</span>
+                            <div className="flex gap-1 ml-2">
+                              <Button size="sm" variant="ghost" onClick={() => abrirModalPromocion(promocion)}>
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => togglePromocion(promocion.id)}
+                                className="text-orange-600 hover:text-orange-700"
+                              >
+                                <PowerOff className="h-3 w-3" />
+                              </Button>
+                              <Button size="sm" variant="ghost" onClick={() => eliminarPromocion(promocion.id)}>
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
                             </div>
-                            <Badge className="mt-2" variant="default">
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <Badge variant="default" className="bg-green-100 text-green-800">
                               Activa
                             </Badge>
-                            <Badge className="mt-2 ml-2" variant="outline">
+                            <Badge variant="outline" className="text-xs">
                               {promocion.tipo}
                             </Badge>
                           </div>
-                        ))}
-                    </div>
+                        </div>
+                      ))}
                   </div>
+                  {filtrarPromociones().filter((p) => p.activa).length === 0 && (
+                    <p className="text-gray-500 text-sm italic">No hay promociones activas</p>
+                  )}
+                </div>
 
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-600 mb-4">
-                      Promociones Inactivas ({filtrarPromociones().filter((p) => !p.activa).length})
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {filtrarPromociones()
-                        .filter((promocion) => !promocion.activa)
-                        .map((promocion) => (
-                          <div key={promocion.id} className="p-4 border rounded-lg bg-gray-50">
-                            <div className="flex justify-between items-start mb-2">
-                              <h4 className="font-medium text-gray-700">{promocion.nombre}</h4>
-                              <div className="flex gap-1">
-                                <Button size="sm" variant="ghost" onClick={() => abrirModalPromocion(promocion)}>
-                                  <Edit className="h-3 w-3" />
-                                </Button>
-                                <Button size="sm" variant="ghost" onClick={() => togglePromocion(promocion.id)}>
-                                  <Power className="h-3 w-3" />
-                                </Button>
-                                <Button size="sm" variant="ghost" onClick={() => eliminarPromocion(promocion.id)}>
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
+                {/* Promociones Inactivas */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-500 border-b pb-2">
+                    Promociones Inactivas ({filtrarPromociones().filter((p) => !p.activa).length})
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {filtrarPromociones()
+                      .filter((p) => !p.activa)
+                      .map((promocion) => (
+                        <div key={promocion.id} className="p-4 border rounded-lg bg-gray-50 opacity-75">
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex-1">
+                              <h4 className="font-medium text-gray-600">{promocion.nombre}</h4>
+                              <p className="text-sm text-gray-500 mt-1">{promocion.descripcion}</p>
+                              <div className="flex gap-4 mt-2 text-xs text-gray-400">
+                                <span>Desde: {new Date(promocion.fechaInicio).toLocaleDateString()}</span>
+                                <span>Hasta: {new Date(promocion.fechaFin).toLocaleDateString()}</span>
                               </div>
                             </div>
-                            <p className="text-sm text-gray-600 mb-2">{promocion.descripcion}</p>
-                            <div className="flex justify-between items-center text-xs text-gray-500">
-                              <span>Desde: {promocion.fechaInicio}</span>
-                              <span>Hasta: {promocion.fechaFin}</span>
+                            <div className="flex gap-1 ml-2">
+                              <Button size="sm" variant="ghost" onClick={() => abrirModalPromocion(promocion)}>
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => togglePromocion(promocion.id)}
+                                className="text-green-600 hover:text-green-700"
+                              >
+                                <Power className="h-3 w-3" />
+                              </Button>
+                              <Button size="sm" variant="ghost" onClick={() => eliminarPromocion(promocion.id)}>
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
                             </div>
-                            <Badge className="mt-2" variant="secondary">
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <Badge variant="secondary" className="bg-gray-200 text-gray-600">
                               Inactiva
                             </Badge>
-                            <Badge className="mt-2 ml-2" variant="outline">
+                            <Badge variant="outline" className="text-xs text-gray-500">
                               {promocion.tipo}
                             </Badge>
                           </div>
-                        ))}
-                    </div>
+                        </div>
+                      ))}
                   </div>
+                  {filtrarPromociones().filter((p) => !p.activa).length === 0 && (
+                    <p className="text-gray-500 text-sm italic">No hay promociones inactivas</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* Pestaña de usuarios ya existente */}
           <TabsContent value="usuarios">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Gestión de Usuarios</CardTitle>
+                <CardTitle>Usuarios</CardTitle>
                 <Button onClick={() => abrirModalUsuario()}>
                   <Plus className="h-4 w-4 mr-2" />
                   Nuevo Usuario
@@ -979,9 +1093,11 @@ export default function AdminPage() {
                   {filtrarUsuarios().map((usuario) => (
                     <div key={usuario.id} className="p-4 border rounded-lg bg-white">
                       <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center gap-2">
-                          <Users className="h-4 w-4 text-gray-500" />
+                        <div className="flex-1">
                           <h4 className="font-medium">{usuario.nombre}</h4>
+                          <Badge variant={usuario.rol === "administrador" ? "default" : "secondary"} className="mt-1">
+                            {usuario.rol}
+                          </Badge>
                         </div>
                         <div className="flex gap-1">
                           <Button size="sm" variant="ghost" onClick={() => abrirModalUsuario(usuario)}>
@@ -992,7 +1108,6 @@ export default function AdminPage() {
                           </Button>
                         </div>
                       </div>
-                      <Badge variant={usuario.rol === "administrador" ? "default" : "secondary"}>{usuario.rol}</Badge>
                     </div>
                   ))}
                 </div>
@@ -1001,20 +1116,21 @@ export default function AdminPage() {
           </TabsContent>
         </Tabs>
 
-        {/* Modal para productos */}
-        <Dialog open={modalProductoAbierto} onOpenChange={setModalProductoAbierto}>
+        {/* All modals remain the same as before */}
+        {/* Modal Producto */}
+        <Dialog open={modalProducto} onOpenChange={setModalProducto}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>{productoEditando ? "Editar Producto" : "Nuevo Producto"}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="nombre-producto">Nombre del Producto</Label>
+                <Label htmlFor="nombre-producto">Nombre</Label>
                 <Input
                   id="nombre-producto"
                   value={formProducto.nombre}
                   onChange={(e) => setFormProducto((prev) => ({ ...prev, nombre: e.target.value }))}
-                  placeholder="Ingrese el nombre del producto"
+                  placeholder="Nombre del producto"
                 />
               </div>
               <div>
@@ -1022,10 +1138,9 @@ export default function AdminPage() {
                 <Input
                   id="precio-producto"
                   type="number"
-                  step="0.01"
                   value={formProducto.precio}
                   onChange={(e) => setFormProducto((prev) => ({ ...prev, precio: e.target.value }))}
-                  placeholder="Ingrese el precio"
+                  placeholder="0"
                 />
               </div>
               <div>
@@ -1035,182 +1150,286 @@ export default function AdminPage() {
                   onValueChange={(value) => setFormProducto((prev) => ({ ...prev, categoria: value }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Seleccione una categoría" />
+                    <SelectValue placeholder="Seleccionar categoría" />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(productos).map(([key, categoria]: [string, any]) => (
-                      <SelectItem key={key} value={key}>
-                        {categoria.nombre}
-                      </SelectItem>
-                    ))}
+                    {Object.entries(productos)
+                      .sort(([, a], [, b]) => (a.orden || 0) - (b.orden || 0))
+                      .map(([key, categoria]) => (
+                        <SelectItem key={key} value={key}>
+                          {categoria.nombre}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label htmlFor="imagen-producto">Imagen del Producto</Label>
-                <Input id="imagen-producto" type="file" accept="image/*" onChange={handleImageUpload} />
-                {formProducto.imagen && (
-                  <div className="mt-2">
-                    <img
-                      src={formProducto.imagen || "/placeholder.svg"}
-                      alt="Preview"
-                      className="w-20 h-20 object-cover rounded"
-                    />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setFormProducto((prev) => ({ ...prev, imagen: "" }))}
-                      className="mt-2"
-                    >
-                      Quitar imagen
-                    </Button>
-                  </div>
-                )}
+                <Label htmlFor="imagen-producto">Imagen del producto</Label>
+                <div className="space-y-2">
+                  <Input
+                    id="imagen-producto"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="cursor-pointer"
+                  />
+                  {formProducto.imagen && (
+                    <div className="flex items-center gap-3 p-2 border rounded-lg bg-gray-50">
+                      <div className="w-16 h-16 rounded-md overflow-hidden bg-white">
+                        <Image
+                          src={formProducto.imagen || "/placeholder.svg"}
+                          alt="Preview"
+                          width={64}
+                          height={64}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-600">Imagen seleccionada</p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setFormProducto((prev) => ({ ...prev, imagen: "" }))}
+                          className="mt-1"
+                        >
+                          <X className="h-3 w-3 mr-1" />
+                          Quitar
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setModalProductoAbierto(false)}>
+              <div className="flex gap-2">
+                <Button onClick={guardarProducto} className="flex-1">
+                  <Save className="h-4 w-4 mr-2" />
+                  {productoEditando ? "Actualizar" : "Crear"}
+                </Button>
+                <Button variant="outline" onClick={() => setModalProducto(false)}>
                   Cancelar
                 </Button>
-                <Button onClick={guardarProducto}>{productoEditando ? "Actualizar" : "Crear"}</Button>
               </div>
             </div>
           </DialogContent>
         </Dialog>
 
-        {/* Modal para medios de pago */}
-        <Dialog open={modalMedioPagoAbierto} onOpenChange={setModalMedioPagoAbierto}>
+        {/* Modal Medio de Pago */}
+        <Dialog open={modalMedioPago} onOpenChange={setModalMedioPago}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>{medioPagoEditando ? "Editar Medio de Pago" : "Nuevo Medio de Pago"}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="nombre-medio">Nombre del Medio de Pago</Label>
+                <Label htmlFor="nombre-medio">Nombre</Label>
                 <Input
                   id="nombre-medio"
                   value={formMedioPago.nombre}
                   onChange={(e) => setFormMedioPago((prev) => ({ ...prev, nombre: e.target.value }))}
-                  placeholder="Ingrese el nombre del medio de pago"
+                  placeholder="Ej: Débito"
                 />
               </div>
               <div>
-                <Label htmlFor="recargo-medio">Recargo (%)</Label>
+                <Label htmlFor="recargo-medio">Recargo/Descuento (%)</Label>
                 <Input
                   id="recargo-medio"
                   type="number"
                   step="0.01"
                   value={formMedioPago.recargo}
                   onChange={(e) => setFormMedioPago((prev) => ({ ...prev, recargo: e.target.value }))}
-                  placeholder="Ingrese el porcentaje de recargo"
+                  placeholder="0"
                 />
-                <p className="text-sm text-gray-500 mt-1">
-                  Valores positivos son recargos, valores negativos son descuentos
-                </p>
+                <p className="text-xs text-gray-500 mt-1">Valores positivos = recargo, valores negativos = descuento</p>
               </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setModalMedioPagoAbierto(false)}>
+              <div className="flex gap-2">
+                <Button onClick={guardarMedioPago} className="flex-1">
+                  <Save className="h-4 w-4 mr-2" />
+                  Guardar
+                </Button>
+                <Button variant="outline" onClick={() => setModalMedioPago(false)}>
+                  <X className="h-4 w-4 mr-2" />
                   Cancelar
                 </Button>
-                <Button onClick={guardarMedioPago}>{medioPagoEditando ? "Actualizar" : "Crear"}</Button>
               </div>
             </div>
           </DialogContent>
         </Dialog>
 
-        {/* Modal para descuentos */}
-        <Dialog open={modalDescuentoAbierto} onOpenChange={setModalDescuentoAbierto}>
+        {/* Modal Descuento */}
+        <Dialog open={modalDescuento} onOpenChange={setModalDescuento}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>{descuentoEditando ? "Editar Descuento" : "Nuevo Descuento"}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="nombre-descuento">Nombre del Descuento</Label>
+                <Label htmlFor="nombre-descuento">Nombre</Label>
                 <Input
                   id="nombre-descuento"
                   value={formDescuento.nombre}
                   onChange={(e) => setFormDescuento((prev) => ({ ...prev, nombre: e.target.value }))}
-                  placeholder="Ingrese el nombre del descuento"
+                  placeholder="Ej: 15% OFF"
                 />
               </div>
               <div>
-                <Label htmlFor="porcentaje-descuento">Porcentaje (%)</Label>
+                <Label htmlFor="porcentaje-descuento">Porcentaje</Label>
                 <Input
                   id="porcentaje-descuento"
                   type="number"
-                  step="0.01"
-                  min="0"
                   value={formDescuento.porcentaje}
                   onChange={(e) => setFormDescuento((prev) => ({ ...prev, porcentaje: e.target.value }))}
-                  placeholder="Ingrese el porcentaje de descuento"
+                  placeholder="0"
                 />
               </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setModalDescuentoAbierto(false)}>
+              <div className="flex gap-2">
+                <Button onClick={guardarDescuento} className="flex-1">
+                  <Save className="h-4 w-4 mr-2" />
+                  Guardar
+                </Button>
+                <Button variant="outline" onClick={() => setModalDescuento(false)}>
+                  <X className="h-4 w-4 mr-2" />
                   Cancelar
                 </Button>
-                <Button onClick={guardarDescuento}>{descuentoEditando ? "Actualizar" : "Crear"}</Button>
               </div>
             </div>
           </DialogContent>
         </Dialog>
 
+        {/* Modal Categoría */}
+        <Dialog open={modalCategoria} onOpenChange={setModalCategoria}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Gestión de Categorías</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              {/* Lista de categorías existentes con drag and drop */}
+              <div className="space-y-2">
+                <Label>Categorías existentes (arrastra para reordenar):</Label>
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {Object.entries(productos)
+                    .sort(([, a], [, b]) => (a.orden || 0) - (b.orden || 0))
+                    .map(([key, categoria]) => (
+                      <div
+                        key={key}
+                        className={`flex items-center justify-between p-3 border rounded cursor-move transition-colors ${
+                          draggedCategory === key ? "bg-blue-50 border-blue-300" : "bg-white hover:bg-gray-50"
+                        }`}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, key)}
+                        onDragOver={handleDragOver}
+                        onDrop={(e) => handleDrop(e, key)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <GripVertical className="h-4 w-4 text-gray-400" />
+                          <span className="font-medium">{categoria.nombre}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-500">({categoria.productos.length} productos)</span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => abrirModalCategoria({ key, nombre: categoria.nombre })}
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => eliminarCategoria(key)}
+                            disabled={categoria.productos.length > 0}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+
+              {/* Formulario para nueva/editar categoría */}
+              <div className="border-t pt-4">
+                <Label htmlFor="nombre-categoria">{categoriaEditando ? "Editar categoría" : "Nueva categoría"}</Label>
+                <Input
+                  id="nombre-categoria"
+                  value={formCategoria.nombre}
+                  onChange={(e) => setFormCategoria((prev) => ({ ...prev, nombre: e.target.value }))}
+                  placeholder="Nombre de la categoría"
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <Button onClick={guardarCategoria} className="flex-1">
+                  <Save className="h-4 w-4 mr-2" />
+                  {categoriaEditando ? "Actualizar" : "Crear"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setModalCategoria(false)
+                    setCategoriaEditando(null)
+                    setFormCategoria({ key: "", nombre: "" })
+                  }}
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Cancelar
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal Promoción Avanzado */}
         <ModalPromocionAvanzado
-          open={modalPromocionAvanzadoAbierto}
-          onOpenChange={setModalPromocionAvanzadoAbierto}
-          promocion={promocionEditando}
-          onGuardar={guardarPromocionAvanzada}
+          open={modalPromocion}
+          onOpenChange={setModalPromocion}
+          promocion={null}
+          onGuardar={(nuevaPromocion) => {
+            setPromociones((prev) => [...prev, { ...nuevaPromocion, id: Date.now() }])
+          }}
           productos={productos}
         />
 
-        {/* Modal para usuarios ya existente */}
-        <Dialog open={modalUsuarioAbierto} onOpenChange={setModalUsuarioAbierto}>
+        {/* Modal Usuario */}
+        <Dialog open={modalUsuario} onOpenChange={setModalUsuario}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>{usuarioEditando ? "Editar Usuario" : "Nuevo Usuario"}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="nombre-usuario">Nombre de Usuario</Label>
+                <Label htmlFor="nombre-usuario">Nombre</Label>
                 <Input
                   id="nombre-usuario"
                   value={formUsuario.nombre}
                   onChange={(e) => setFormUsuario((prev) => ({ ...prev, nombre: e.target.value }))}
-                  placeholder="Ingrese el nombre de usuario"
-                />
-              </div>
-              <div>
-                <Label htmlFor="contraseña-usuario">Contraseña</Label>
-                <Input
-                  id="contraseña-usuario"
-                  type="password"
-                  value={formUsuario.contraseña}
-                  onChange={(e) => setFormUsuario((prev) => ({ ...prev, contraseña: e.target.value }))}
-                  placeholder="Ingrese la contraseña"
+                  placeholder="Nombre del usuario"
                 />
               </div>
               <div>
                 <Label htmlFor="rol-usuario">Rol</Label>
                 <Select
                   value={formUsuario.rol}
-                  onValueChange={(value: "administrador" | "empleado") =>
-                    setFormUsuario((prev) => ({ ...prev, rol: value }))
-                  }
+                  onValueChange={(value) => setFormUsuario((prev) => ({ ...prev, rol: value }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Seleccione un rol" />
+                    <SelectValue placeholder="Seleccionar rol" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="empleado">Empleado</SelectItem>
                     <SelectItem value="administrador">Administrador</SelectItem>
+                    <SelectItem value="cajero">Cajero</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setModalUsuarioAbierto(false)}>
+              <div className="flex gap-2">
+                <Button onClick={guardarUsuario} className="flex-1">
+                  <Save className="h-4 w-4 mr-2" />
+                  Guardar
+                </Button>
+                <Button variant="outline" onClick={() => setModalUsuario(false)}>
+                  <X className="h-4 w-4 mr-2" />
                   Cancelar
                 </Button>
-                <Button onClick={guardarUsuario}>{usuarioEditando ? "Actualizar" : "Crear"}</Button>
               </div>
             </div>
           </DialogContent>
