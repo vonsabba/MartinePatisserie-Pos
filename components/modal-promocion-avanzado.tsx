@@ -81,6 +81,7 @@ export default function ModalPromocionAvanzado({
   })
 
   const [openProductoSelect, setOpenProductoSelect] = useState<number | null>(null)
+  const [errores, setErrores] = useState<{ [key: string]: boolean }>({})
 
   useEffect(() => {
     if (promocion) {
@@ -107,24 +108,45 @@ export default function ModalPromocionAvanzado({
   }, [promocion])
 
   const handleGuardar = () => {
-    if (!form.nombre || !form.descripcion || !form.fechaInicio || !form.fechaFin || !form.tipo) return
+    const nuevosErrores: { [key: string]: boolean } = {}
 
-    // Validar que la configuración esté completa según el tipo
-    if (form.tipo === "combo" && (!form.configuracion.productos || !form.configuracion.precioCombo)) {
-      alert("Por favor completa todos los campos del combo")
-      return
+    // Validar campos obligatorios
+    if (!form.nombre) nuevosErrores.nombre = true
+    if (!form.descripcion) nuevosErrores.descripcion = true
+    if (!form.fechaInicio) nuevosErrores.fechaInicio = true
+    if (!form.fechaFin) nuevosErrores.fechaFin = true
+    if (!form.tipo) nuevosErrores.tipo = true
+
+    // Validaciones específicas por tipo
+    if (form.tipo === "combo") {
+      if (!form.configuracion.productos || form.configuracion.productos.length === 0) {
+        nuevosErrores.productos = true
+      }
+      if (!form.configuracion.precioCombo) nuevosErrores.precioCombo = true
     }
 
-    if (
-      form.tipo === "descuento-cantidad" &&
-      (!form.configuracion.productos || !form.configuracion.cantidadMinima || !form.configuracion.porcentaje)
-    ) {
-      alert("Por favor completa todos los campos del descuento por cantidad")
-      return
+    if (form.tipo === "descuento-cantidad") {
+      if (!form.configuracion.productos || form.configuracion.productos.length === 0) {
+        nuevosErrores.productos = true
+      }
+      if (!form.configuracion.cantidadMinima) nuevosErrores.cantidadMinima = true
+      if (!form.configuracion.porcentaje) nuevosErrores.porcentaje = true
     }
 
-    if (form.tipo === "2x1" && (!form.configuracion.productos || form.configuracion.productos.length === 0)) {
-      alert("Por favor agrega al menos un producto para el 2x1")
+    if (form.tipo === "2x1") {
+      if (!form.configuracion.productos || form.configuracion.productos.length === 0) {
+        nuevosErrores.productos = true
+      }
+    }
+
+    if (form.tipo === "descuento-general") {
+      if (!form.configuracion.porcentaje) nuevosErrores.porcentaje = true
+    }
+
+    setErrores(nuevosErrores)
+
+    // Si hay errores, no continuar
+    if (Object.keys(nuevosErrores).length > 0) {
       return
     }
 
@@ -250,6 +272,16 @@ export default function ModalPromocionAvanzado({
     )
   }
 
+  const limpiarError = (campo: string) => {
+    if (errores[campo]) {
+      setErrores((prev) => {
+        const nuevosErrores = { ...prev }
+        delete nuevosErrores[campo]
+        return nuevosErrores
+      })
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -265,8 +297,12 @@ export default function ModalPromocionAvanzado({
               <Input
                 id="nombre"
                 value={form.nombre}
-                onChange={(e) => setForm((prev) => ({ ...prev, nombre: e.target.value }))}
+                onChange={(e) => {
+                  setForm((prev) => ({ ...prev, nombre: e.target.value }))
+                  limpiarError("nombre")
+                }}
                 placeholder="Ej: 2x1 en Cookies"
+                className={errores.nombre ? "border-red-500 focus:border-red-500" : ""}
               />
             </div>
             <div>
@@ -275,9 +311,10 @@ export default function ModalPromocionAvanzado({
                 value={form.tipo}
                 onValueChange={(value) => {
                   setForm((prev) => ({ ...prev, tipo: value, configuracion: {} }))
+                  limpiarError("tipo")
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className={errores.tipo ? "border-red-500 focus:border-red-500" : ""}>
                   <SelectValue placeholder="Seleccionar tipo" />
                 </SelectTrigger>
                 <SelectContent>
@@ -295,8 +332,12 @@ export default function ModalPromocionAvanzado({
             <Input
               id="descripcion"
               value={form.descripcion}
-              onChange={(e) => setForm((prev) => ({ ...prev, descripcion: e.target.value }))}
+              onChange={(e) => {
+                setForm((prev) => ({ ...prev, descripcion: e.target.value }))
+                limpiarError("descripcion")
+              }}
               placeholder="Descripción detallada de la promoción"
+              className={errores.descripcion ? "border-red-500 focus:border-red-500" : ""}
             />
           </div>
 
@@ -363,6 +404,11 @@ export default function ModalPromocionAvanzado({
                     </Button>
                   </div>
                 ))}
+                {errores.productos && (
+                  <div className="text-red-500 text-sm mt-1">
+                    Debes agregar al menos un producto para esta promoción
+                  </div>
+                )}
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                   <div className="flex items-start gap-2">
                     <Info className="h-4 w-4 text-blue-600 mt-0.5" />
@@ -453,6 +499,11 @@ export default function ModalPromocionAvanzado({
                     </Button>
                   </div>
                 ))}
+                {errores.productos && (
+                  <div className="text-red-500 text-sm mt-1">
+                    Debes agregar al menos un producto para esta promoción
+                  </div>
+                )}
 
                 <div className="mt-4">
                   <Label htmlFor="precio-combo">Precio del combo</Label>
@@ -460,8 +511,12 @@ export default function ModalPromocionAvanzado({
                     id="precio-combo"
                     type="number"
                     value={form.configuracion.precioCombo || ""}
-                    onChange={(e) => actualizarConfiguracion({ precioCombo: Number.parseFloat(e.target.value) || 0 })}
+                    onChange={(e) => {
+                      actualizarConfiguracion({ precioCombo: Number.parseFloat(e.target.value) || 0 })
+                      limpiarError("precioCombo")
+                    }}
                     placeholder="Precio especial del combo"
+                    className={errores.precioCombo ? "border-red-500 focus:border-red-500" : ""}
                   />
                 </div>
               </CardContent>
@@ -530,6 +585,11 @@ export default function ModalPromocionAvanzado({
                     </Button>
                   </div>
                 ))}
+                {errores.productos && (
+                  <div className="text-red-500 text-sm mt-1">
+                    Debes agregar al menos un producto para esta promoción
+                  </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-4 mt-4">
                   <div>
@@ -538,10 +598,12 @@ export default function ModalPromocionAvanzado({
                       type="number"
                       min="2"
                       value={form.configuracion.cantidadMinima || ""}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         actualizarConfiguracion({ cantidadMinima: Number.parseInt(e.target.value) || 2 })
-                      }
+                        limpiarError("cantidadMinima")
+                      }}
                       placeholder="Ej: 3"
+                      className={errores.cantidadMinima ? "border-red-500 focus:border-red-500" : ""}
                     />
                   </div>
                   <div>
@@ -551,8 +613,12 @@ export default function ModalPromocionAvanzado({
                       min="1"
                       max="100"
                       value={form.configuracion.porcentaje || ""}
-                      onChange={(e) => actualizarConfiguracion({ porcentaje: Number.parseFloat(e.target.value) || 0 })}
+                      onChange={(e) => {
+                        actualizarConfiguracion({ porcentaje: Number.parseFloat(e.target.value) || 0 })
+                        limpiarError("porcentaje")
+                      }}
                       placeholder="Ej: 10"
+                      className={errores.porcentaje ? "border-red-500 focus:border-red-500" : ""}
                     />
                   </div>
                 </div>
@@ -573,8 +639,12 @@ export default function ModalPromocionAvanzado({
                     min="1"
                     max="100"
                     value={form.configuracion.porcentaje || ""}
-                    onChange={(e) => actualizarConfiguracion({ porcentaje: Number.parseFloat(e.target.value) || 0 })}
+                    onChange={(e) => {
+                      actualizarConfiguracion({ porcentaje: Number.parseFloat(e.target.value) || 0 })
+                      limpiarError("porcentaje")
+                    }}
                     placeholder="Ej: 15"
+                    className={errores.porcentaje ? "border-red-500 focus:border-red-500" : ""}
                   />
                 </div>
               </CardContent>
@@ -589,7 +659,11 @@ export default function ModalPromocionAvanzado({
                 id="fecha-inicio"
                 type="date"
                 value={form.fechaInicio}
-                onChange={(e) => setForm((prev) => ({ ...prev, fechaInicio: e.target.value }))}
+                onChange={(e) => {
+                  setForm((prev) => ({ ...prev, fechaInicio: e.target.value }))
+                  limpiarError("fechaInicio")
+                }}
+                className={errores.fechaInicio ? "border-red-500 focus:border-red-500" : ""}
               />
             </div>
             <div>
@@ -598,7 +672,11 @@ export default function ModalPromocionAvanzado({
                 id="fecha-fin"
                 type="date"
                 value={form.fechaFin}
-                onChange={(e) => setForm((prev) => ({ ...prev, fechaFin: e.target.value }))}
+                onChange={(e) => {
+                  setForm((prev) => ({ ...prev, fechaFin: e.target.value }))
+                  limpiarError("fechaFin")
+                }}
+                className={errores.fechaFin ? "border-red-500 focus:border-red-500" : ""}
               />
             </div>
           </div>
