@@ -949,11 +949,21 @@ export default function EstadisticasPage() {
                     className="h-[300px]"
                   >
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={analisisCategorias} layout="horizontal">
+                      <BarChart data={analisisCategorias}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis type="number" />
-                        <YAxis dataKey="categoria" type="category" width={100} />
-                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <XAxis
+                          dataKey="categoria"
+                          angle={-45}
+                          textAnchor="end"
+                          height={80}
+                          fontSize={12}
+                          interval={0}
+                        />
+                        <YAxis />
+                        <ChartTooltip
+                          content={<ChartTooltipContent />}
+                          formatter={(value, name) => [`$${Number(value).toLocaleString()}`, name]}
+                        />
                         <Bar dataKey="ingresos" fill="var(--color-ingresos)" />
                       </BarChart>
                     </ResponsiveContainer>
