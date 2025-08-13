@@ -112,6 +112,7 @@ export default function AdminPage() {
   const [medioPagoEditando, setMedioPagoEditando] = useState<MedioPago | null>(null)
   const [descuentoEditando, setDescuentoEditando] = useState<Descuento | null>(null)
   const [usuarioEditando, setUsuarioEditando] = useState<Usuario | null>(null)
+  const [promocionEditando, setPromocionEditando] = useState<Promocion | null>(null)
 
   // Estados para búsqueda y filtros
   const [busquedaProductos, setBusquedaProductos] = useState("")
@@ -475,29 +476,7 @@ export default function AdminPage() {
 
   // Funciones para promociones
   const abrirModalPromocion = (promocion?: Promocion) => {
-    if (promocion) {
-      // setPromocionEditando(promocion)
-      // setFormPromocion({
-      //   nombre: promocion.nombre,
-      //   descripcion: promocion.descripcion,
-      //   activa: promocion.activa,
-      //   fechaInicio: promocion.fechaInicio,
-      //   fechaFin: promocion.fechaFin,
-      //   tipo: promocion.tipo,
-      //   configuracion: promocion.configuracion || {},
-      // })
-    } else {
-      // setPromocionEditando(null)
-      // setFormPromocion({
-      //   nombre: "",
-      //   descripcion: "",
-      //   activa: true,
-      //   fechaInicio: "",
-      //   fechaFin: "",
-      //   tipo: "",
-      //   configuracion: {},
-      // })
-    }
+    // No necesitamos hacer nada aquí ya que el modal maneja su propio estado
     setModalPromocion(true)
   }
 
@@ -763,7 +742,8 @@ export default function AdminPage() {
                                     >
                                       <Edit className="h-3 w-3" />
                                     </Button>
-                                    <Button className="bg-[rgba(188,149,54,1)]"
+                                    <Button
+                                      className="bg-[rgba(188,149,54,1)]"
                                       size="sm"
                                       variant="destructive"
                                       onClick={() => eliminarProducto(producto.id)}
@@ -968,7 +948,14 @@ export default function AdminPage() {
                               </div>
                             </div>
                             <div className="flex gap-1 ml-2">
-                              <Button size="sm" variant="ghost" onClick={() => abrirModalPromocion(promocion)}>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  setPromocionEditando(promocion)
+                                  abrirModalPromocion(promocion)
+                                }}
+                              >
                                 <Edit className="h-3 w-3" />
                               </Button>
                               <Button
@@ -1020,7 +1007,14 @@ export default function AdminPage() {
                               </div>
                             </div>
                             <div className="flex gap-1 ml-2">
-                              <Button size="sm" variant="ghost" onClick={() => abrirModalPromocion(promocion)}>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  setPromocionEditando(promocion)
+                                  abrirModalPromocion(promocion)
+                                }}
+                              >
                                 <Edit className="h-3 w-3" />
                               </Button>
                               <Button
@@ -1386,9 +1380,18 @@ export default function AdminPage() {
         <ModalPromocionAvanzado
           open={modalPromocion}
           onOpenChange={setModalPromocion}
-          promocion={null}
+          promocion={promocionEditando}
           onGuardar={(nuevaPromocion) => {
-            setPromociones((prev) => [...prev, { ...nuevaPromocion, id: Date.now() }])
+            if (promocionEditando) {
+              // Editar promoción existente
+              setPromociones((prev) =>
+                prev.map((p) => (p.id === promocionEditando.id ? { ...nuevaPromocion, id: promocionEditando.id } : p)),
+              )
+            } else {
+              // Crear nueva promoción
+              setPromociones((prev) => [...prev, { ...nuevaPromocion, id: Date.now() }])
+            }
+            setPromocionEditando(null)
           }}
           productos={productos}
         />
