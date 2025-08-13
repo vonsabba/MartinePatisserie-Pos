@@ -1443,7 +1443,7 @@ export default function AdminPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="administrador">Administrador</SelectItem>
-                    <SelectItem value="cajero">Cajero</SelectItem>
+                    <SelectItem value="empleado">Empleado</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
