@@ -9,6 +9,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
 import {
   ArrowLeft,
   TrendingUp,
@@ -56,7 +57,7 @@ const COLORES_GRAFICO = [
 ]
 
 export default function EstadisticasPage() {
-  const { ventas } = useAppContext()
+  const { ventas, productos } = useAppContext()
   const [periodoSeleccionado, setPeriodoSeleccionado] = useState("30d")
   const [fechaInicio, setFechaInicio] = useState<Date>()
   const [fechaFin, setFechaFin] = useState<Date>()
@@ -250,6 +251,116 @@ export default function EstadisticasPage() {
         .sort((a, b) => a.mes.localeCompare(b.mes)),
     }
   }, [ventasFiltradas])
+
+  const analisisPromociones = useMemo(() => {
+    const promocionesUsadas: {
+      [nombre: string]: {
+        vecesAplicada: number
+        descuentoTotal: number
+        ventasAfectadas: number
+      }
+    } = {}
+
+    ventasFiltradas.forEach((venta) => {
+      venta.promocionesAplicadas.forEach((promocion) => {
+        if (!promocionesUsadas[promocion]) {
+          promocionesUsadas[promocion] = {
+            vecesAplicada: 0,
+            descuentoTotal: 0,
+            ventasAfectadas: 0,
+          }
+        }
+        promocionesUsadas[promocion].vecesAplicada += 1
+        promocionesUsadas[promocion].descuentoTotal += venta.descuentoPromociones
+        promocionesUsadas[promocion].ventasAfectadas += 1
+      })
+    })
+
+    return Object.entries(promocionesUsadas)
+      .map(([nombre, datos]) => ({
+        nombre,
+        ...datos,
+        promedioDescuento: datos.descuentoTotal / datos.vecesAplicada,
+      }))
+      .sort((a, b) => b.descuentoTotal - a.descuentoTotal)
+  }, [ventasFiltradas])
+
+  const analisisMediosPago = useMemo(() => {
+    const mediosPagoUsados: {
+      [medio: string]: {
+        cantidad: number
+        ingresos: number
+        recargos: number
+      }
+    } = {}
+
+    ventasFiltradas.forEach((venta) => {
+      const medio = venta.nombreMedioPago
+      if (!mediosPagoUsados[medio]) {
+        mediosPagoUsados[medio] = {
+          cantidad: 0,
+          ingresos: 0,
+          recargos: 0,
+        }
+      }
+      mediosPagoUsados[medio].cantidad += 1
+      mediosPagoUsados[medio].ingresos += venta.total
+      mediosPagoUsados[medio].recargos += venta.recargo
+    })
+
+    return Object.entries(mediosPagoUsados)
+      .map(([medio, datos]) => ({
+        medio,
+        ...datos,
+        promedioVenta: datos.ingresos / datos.cantidad,
+        porcentajeUso: (datos.cantidad / ventasFiltradas.length) * 100,
+      }))
+      .sort((a, b) => b.cantidad - a.cantidad)
+  }, [ventasFiltradas])
+
+  const analisisCategorias = useMemo(() => {
+    const categoriasVendidas: {
+      [categoria: string]: {
+        cantidad: number
+        ingresos: number
+        productos: Set<string>
+      }
+    } = {}
+
+    ventasFiltradas.forEach((venta) => {
+      venta.items.forEach((item) => {
+        // Encontrar la categoría del producto
+        let categoriaEncontrada = "Sin categoría"
+        Object.entries(productos).forEach(([catKey, categoria]) => {
+          const productoExiste = categoria.productos.find((p) => p.id === item.producto.id)
+          if (productoExiste) {
+            categoriaEncontrada = categoria.nombre
+          }
+        })
+
+        if (!categoriasVendidas[categoriaEncontrada]) {
+          categoriasVendidas[categoriaEncontrada] = {
+            cantidad: 0,
+            ingresos: 0,
+            productos: new Set(),
+          }
+        }
+        categoriasVendidas[categoriaEncontrada].cantidad += item.cantidad
+        categoriasVendidas[categoriaEncontrada].ingresos += item.producto.precio * item.cantidad
+        categoriasVendidas[categoriaEncontrada].productos.add(item.producto.nombre)
+      })
+    })
+
+    return Object.entries(categoriasVendidas)
+      .map(([categoria, datos]) => ({
+        categoria,
+        cantidad: datos.cantidad,
+        ingresos: datos.ingresos,
+        productosUnicos: datos.productos.size,
+        promedioVenta: datos.ingresos / datos.cantidad,
+      }))
+      .sort((a, b) => b.ingresos - a.ingresos)
+  }, [ventasFiltradas, productos])
 
   const formatearPeriodo = (periodo: string) => {
     if (periodo === "personalizado" && fechaInicio && fechaFin) {
@@ -655,20 +766,77 @@ export default function EstadisticasPage() {
                   </ChartContainer>
                 </CardContent>
               </Card>
-
             </div>
           </TabsContent>
 
           <TabsContent value="promociones" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Gift className="h-5 w-5" />
-                  Rendimiento de Promociones
-                </CardTitle>
-              </CardHeader>
-              <CardContent>{/* Placeholder for promociones analysis */}</CardContent>
-            </Card>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Gift className="h-5 w-5" />
+                    Promociones Más Utilizadas
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ChartContainer
+                    config={{
+                      descuentoTotal: {
+                        label: "Descuento Total",
+                        color: "hsl(var(--chart-1))",
+                      },
+                    }}
+                    className="h-[300px]"
+                  >
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={analisisPromociones}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="nombre" angle={-45} textAnchor="end" height={80} fontSize={12} />
+                        <YAxis />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Bar dataKey="descuentoTotal" fill="var(--color-descuentoTotal)" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="h-5 w-5" />
+                    Detalle de Promociones
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {analisisPromociones.map((promocion, index) => (
+                      <div
+                        key={promocion.nombre}
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center w-8 h-8 bg-orange-100 text-orange-600 rounded-full font-bold text-sm">
+                            {index + 1}
+                          </div>
+                          <div>
+                            <p className="font-medium">{promocion.nombre}</p>
+                            <p className="text-sm text-gray-500">{promocion.vecesAplicada} veces aplicada</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-orange-600">${promocion.descuentoTotal.toLocaleString()}</p>
+                          <p className="text-sm text-gray-500">${promocion.promedioDescuento.toLocaleString()}/uso</p>
+                        </div>
+                      </div>
+                    ))}
+                    {analisisPromociones.length === 0 && (
+                      <p className="text-gray-500 text-center py-8">No se aplicaron promociones en este período</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="pagos" className="space-y-6">
@@ -683,8 +851,8 @@ export default function EstadisticasPage() {
                 <CardContent>
                   <ChartContainer
                     config={{
-                      ventas: {
-                        label: "Ventas",
+                      cantidad: {
+                        label: "Cantidad",
                         color: "hsl(var(--chart-1))",
                       },
                     }}
@@ -693,22 +861,22 @@ export default function EstadisticasPage() {
                     <ResponsiveContainer width="100%" height="100%">
                       <RechartsPieChart>
                         <Pie
-                          data={analisisTemporal.porMes}
+                          data={analisisMediosPago}
                           cx="50%"
                           cy="50%"
                           outerRadius={80}
-                          dataKey="ingresos"
-                          label={({ mes, ingresos }) => {
-                            const total = analisisTemporal.porMes.reduce((sum, item) => sum + item.ingresos, 0)
-                            const porcentaje = total > 0 ? (ingresos / total) * 100 : 0
-                            return `${mes}: ${porcentaje.toFixed(1)}%`
-                          }}
+                          dataKey="cantidad"
+                          nameKey="medio"
+                          label={({ medio, porcentajeUso }) => `${medio}: ${porcentajeUso.toFixed(1)}%`}
                         >
-                          {analisisTemporal.porMes.map((entry, index) => (
+                          {analisisMediosPago.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={COLORES_GRAFICO[index % COLORES_GRAFICO.length]} />
                           ))}
                         </Pie>
-                        <Tooltip />
+                        <Tooltip
+                          formatter={(value, name) => [value, name]}
+                          labelFormatter={(label) => `Medio: ${label}`}
+                        />
                       </RechartsPieChart>
                     </ResponsiveContainer>
                   </ChartContainer>
@@ -722,21 +890,113 @@ export default function EstadisticasPage() {
                     Detalles por Medio de Pago
                   </CardTitle>
                 </CardHeader>
-                <CardContent>{/* Placeholder for pagos analysis */}</CardContent>
+                <CardContent>
+                  <div className="space-y-3">
+                    {analisisMediosPago.map((medio, index) => (
+                      <div key={medio.medio} className="p-4 border rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-medium">{medio.medio}</h4>
+                          <Badge
+                            variant="outline"
+                            style={{ backgroundColor: COLORES_GRAFICO[index % COLORES_GRAFICO.length] + "20" }}
+                          >
+                            {medio.porcentajeUso.toFixed(1)}%
+                          </Badge>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <p className="text-gray-600">Ventas</p>
+                            <p className="font-semibold">{medio.cantidad}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-600">Ingresos</p>
+                            <p className="font-semibold">${medio.ingresos.toLocaleString()}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-600">Promedio/Venta</p>
+                            <p className="font-semibold">${medio.promedioVenta.toLocaleString()}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-600">Recargos</p>
+                            <p className="font-semibold">${medio.recargos.toLocaleString()}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
               </Card>
             </div>
           </TabsContent>
 
           <TabsContent value="categorias" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="h-5 w-5" />
-                  Rendimiento por Categoría
-                </CardTitle>
-              </CardHeader>
-              <CardContent>{/* Placeholder for categorías analysis */}</CardContent>
-            </Card>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5" />
+                    Ingresos por Categoría
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ChartContainer
+                    config={{
+                      ingresos: {
+                        label: "Ingresos",
+                        color: "hsl(var(--chart-2))",
+                      },
+                    }}
+                    className="h-[300px]"
+                  >
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={analisisCategorias} layout="horizontal">
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis type="number" />
+                        <YAxis dataKey="categoria" type="category" width={100} />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Bar dataKey="ingresos" fill="var(--color-ingresos)" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="h-5 w-5" />
+                    Rendimiento por Categoría
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {analisisCategorias.map((categoria, index) => (
+                      <div
+                        key={categoria.categoria}
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center w-8 h-8 bg-purple-100 text-purple-600 rounded-full font-bold text-sm">
+                            {index + 1}
+                          </div>
+                          <div>
+                            <p className="font-medium">{categoria.categoria}</p>
+                            <p className="text-sm text-gray-500">{categoria.productosUnicos} productos únicos</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-purple-600">${categoria.ingresos.toLocaleString()}</p>
+                          <p className="text-sm text-gray-500">{categoria.cantidad} unidades</p>
+                        </div>
+                      </div>
+                    ))}
+                    {analisisCategorias.length === 0 && (
+                      <p className="text-gray-500 text-center py-8">No hay datos de categorías para mostrar</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
