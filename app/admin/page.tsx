@@ -476,7 +476,11 @@ export default function AdminPage() {
 
   // Funciones para promociones
   const abrirModalPromocion = (promocion?: Promocion) => {
-    // No necesitamos hacer nada aquí ya que el modal maneja su propio estado
+    if (promocion) {
+      setPromocionEditando(promocion)
+    } else {
+      setPromocionEditando(null)
+    }
     setModalPromocion(true)
   }
 
@@ -1379,7 +1383,12 @@ export default function AdminPage() {
         {/* Modal Promoción Avanzado */}
         <ModalPromocionAvanzado
           open={modalPromocion}
-          onOpenChange={setModalPromocion}
+          onOpenChange={(open) => {
+            setModalPromocion(open)
+            if (!open) {
+              setPromocionEditando(null)
+            }
+          }}
           promocion={promocionEditando}
           onGuardar={(nuevaPromocion) => {
             if (promocionEditando) {
@@ -1392,6 +1401,7 @@ export default function AdminPage() {
               setPromociones((prev) => [...prev, { ...nuevaPromocion, id: Date.now() }])
             }
             setPromocionEditando(null)
+            setModalPromocion(false)
           }}
           productos={productos}
         />
