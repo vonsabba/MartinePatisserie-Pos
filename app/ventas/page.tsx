@@ -453,20 +453,21 @@ export default function VentasPage() {
 
   return (
     <RouteGuard requireAuth={true} requireAdmin={true}>
-      <div className="min-h-screen bg-gray-50 p-4">
+      <div className="min-h-screen bg-gray-50 p-4 sm:p-4">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-4">
-              <Image src="/mp-logo.svg" alt="MP Logo" width={150} height={60} className="h-12 w-auto" />
-              <h1 className="text-2xl font-bold">Registro de Ventas</h1>
+          <div className="flex flex-col md:flex-row sm:items-center md:justify-between mb-4 sm:mb-8 gap-3 sm:gap-4">
+            <div className="flex flex-col md:flex-row sm:items-center gap-2 sm:gap-4">
+              <Image src="/mp-logo.svg" alt="MP Logo" width={150} height={60} className="h-8 sm:h-12 w-auto" />
+              <h1 className="text-lg sm:text-2xl font-bold text-center">Registro de Ventas</h1>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-row justify-center items-center gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline">
-                    <Download className="h-4 w-4 mr-2" />
-                    Exportar ({ventasFiltradas.length} ventas)
+                  <Button variant="outline" size="sm" className="text-xs sm:text-sm bg-transparent">
+                    <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                    <span className="hidden sm:inline">Exportar ({ventasFiltradas.length} ventas)</span>
+                    <span className="sm:hidden">Exportar ({ventasFiltradas.length})</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
@@ -481,85 +482,95 @@ export default function VentasPage() {
                 </DropdownMenuContent>
               </DropdownMenu>
               <Link href="/estadisticas">
-                <Button variant="outline">
-                  <Activity className="h-4 w-4 mr-2" />
-                  Estadísticas
+                <Button variant="outline" size="sm" className="text-xs sm:text-sm bg-transparent">
+                  <Activity className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                  <span className="hidden sm:inline">Estadísticas</span>
+                  <span className="sm:hidden">Stats</span>
                 </Button>
               </Link>
               <Link href="/">
-                <Button variant="outline">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Volver al POS
+                <Button variant="outline" size="sm" className="text-xs sm:text-sm bg-transparent">
+                  <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                  <span className="hidden sm:inline">Volver al POS</span>
+                  <span className="sm:hidden">Volver</span>
                 </Button>
               </Link>
             </div>
           </div>
 
           <Tabs value={vistaActual} onValueChange={(value) => setVistaActual(value as "todas" | "hoy" | "mes")}>
-            <TabsList className="grid w-full grid-cols-3 mb-6">
-              <TabsTrigger value="todas">Todas las Ventas</TabsTrigger>
-              <TabsTrigger value="hoy">Hoy</TabsTrigger>
-              <TabsTrigger value="mes">Este Mes</TabsTrigger>
-            </TabsList>
+            <div className="overflow-x-auto mb-4 sm:mb-6">
+              <TabsList className="grid w-full grid-cols-3 min-w-[300px] sm:min-w-0">
+                <TabsTrigger value="todas" className="text-xs sm:text-sm">
+                  Todas las Ventas
+                </TabsTrigger>
+                <TabsTrigger value="hoy" className="text-xs sm:text-sm">
+                  Hoy
+                </TabsTrigger>
+                <TabsTrigger value="mes" className="text-xs sm:text-sm">
+                  Este Mes
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             {/* Estadísticas */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4 mb-4 sm:mb-6">
               <Card>
-                <CardContent className="p-4">
+                <CardContent className="p-3 sm:p-4">
                   <div className="flex items-center gap-2">
-                    <Receipt className="h-4 w-4 text-blue-600" />
+                    <Receipt className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
                     <div>
-                      <p className="text-sm text-gray-600">Total Ventas</p>
-                      <p className="text-2xl font-bold">{estadisticas.totalVentas}</p>
+                      <p className="text-xs sm:text-sm text-gray-600">Total Ventas</p>
+                      <p className="text-lg sm:text-2xl font-bold">{estadisticas.totalVentas}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardContent className="p-4">
+                <CardContent className="p-3 sm:p-4">
                   <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-green-600" />
+                    <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
                     <div>
-                      <p className="text-sm text-gray-600">Total Facturado</p>
-                      <p className="text-2xl font-bold">${estadisticas.totalFacturado.toLocaleString()}</p>
+                      <p className="text-xs sm:text-sm text-gray-600">Total Facturado</p>
+                      <p className="text-lg sm:text-2xl font-bold">${estadisticas.totalFacturado.toLocaleString()}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardContent className="p-4">
+              <Card className="col-span-2 sm:col-span-1">
+                <CardContent className="p-3 sm:p-4">
                   <div className="flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-purple-600" />
+                    <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-purple-600" />
                     <div>
-                      <p className="text-sm text-gray-600">Promedio por Venta</p>
-                      <p className="text-2xl font-bold">${estadisticas.promedioVenta.toLocaleString()}</p>
+                      <p className="text-xs sm:text-sm text-gray-600">Promedio por Venta</p>
+                      <p className="text-lg sm:text-2xl font-bold">${estadisticas.promedioVenta.toLocaleString()}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardContent className="p-4">
+              <Card className="col-span-2 sm:col-span-3 lg:col-span-1">
+                <CardContent className="p-3 sm:p-4">
                   <div className="flex items-center gap-2">
-                    <Package className="h-4 w-4 text-orange-600" />
+                    <Package className="h-3 w-3 sm:h-4 sm:w-4 text-orange-600" />
                     <div>
-                      <p className="text-sm text-gray-600">Más Vendido</p>
-                      <p className="text-sm font-bold truncate">{estadisticas.productoMasVendido.nombre}</p>
+                      <p className="text-xs sm:text-sm text-gray-600">Más Vendido</p>
+                      <p className="text-xs sm:text-sm font-bold truncate">{estadisticas.productoMasVendido.nombre}</p>
                       <p className="text-xs text-gray-500">({estadisticas.productoMasVendido.cantidad} unidades)</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardContent className="p-4">
+              <Card className="col-span-2 sm:col-span-3 lg:col-span-1">
+                <CardContent className="p-3 sm:p-4">
                   <div className="flex items-center gap-2">
-                    <CreditCard className="h-4 w-4 text-indigo-600" />
+                    <CreditCard className="h-3 w-3 sm:h-4 sm:w-4 text-indigo-600" />
                     <div>
-                      <p className="text-sm text-gray-600">Medio Preferido</p>
-                      <p className="text-sm font-bold">{estadisticas.medioMasUsado.medio}</p>
+                      <p className="text-xs sm:text-sm text-gray-600">Medio Preferido</p>
+                      <p className="text-xs sm:text-sm font-bold">{estadisticas.medioMasUsado.medio}</p>
                       <p className="text-xs text-gray-500">({estadisticas.medioMasUsado.cantidad} veces)</p>
                     </div>
                   </div>
@@ -567,7 +578,7 @@ export default function VentasPage() {
               </Card>
             </div>
 
-            <TabsContent value="todas" className="space-y-6">
+            <TabsContent value="todas" className="space-y-4 sm:space-y-6">
               <VentasContent
                 ventasAgrupadasPorFecha={ventasAgrupadasPorFecha}
                 busqueda={busqueda}
@@ -586,7 +597,7 @@ export default function VentasPage() {
               />
             </TabsContent>
 
-            <TabsContent value="hoy" className="space-y-6">
+            <TabsContent value="hoy" className="space-y-4 sm:space-y-6">
               <VentasContent
                 ventasAgrupadasPorFecha={ventasAgrupadasPorFecha}
                 busqueda={busqueda}
@@ -605,7 +616,7 @@ export default function VentasPage() {
               />
             </TabsContent>
 
-            <TabsContent value="mes" className="space-y-6">
+            <TabsContent value="mes" className="space-y-4 sm:space-y-6">
               <VentasContent
                 ventasAgrupadasPorFecha={ventasAgrupadasPorFecha}
                 busqueda={busqueda}
@@ -627,32 +638,37 @@ export default function VentasPage() {
 
           {/* Modal de Edición */}
           <Dialog open={modalEditar} onOpenChange={setModalEditar}>
-            <DialogContent>
+            <DialogContent className="w-[95vw] max-w-md">
               <DialogHeader>
-                <DialogTitle>Editar Venta</DialogTitle>
+                <DialogTitle className="text-lg">Editar Venta</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="fecha-editar">Fecha y Hora</Label>
+                  <Label htmlFor="fecha-editar" className="text-sm">
+                    Fecha y Hora
+                  </Label>
                   <Input
                     id="fecha-editar"
                     type="datetime-local"
                     value={formEditar.fecha}
                     onChange={(e) => setFormEditar((prev) => ({ ...prev, fecha: e.target.value }))}
+                    className="text-sm"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="medio-pago-editar">Medio de Pago</Label>
+                  <Label htmlFor="medio-pago-editar" className="text-sm">
+                    Medio de Pago
+                  </Label>
                   <Select
                     value={formEditar.medioPago}
                     onValueChange={(value) => setFormEditar((prev) => ({ ...prev, medioPago: value }))}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="text-sm">
                       <SelectValue placeholder="Seleccionar medio de pago" />
                     </SelectTrigger>
                     <SelectContent>
                       {mediosPago.map((medio) => (
-                        <SelectItem key={medio.id} value={medio.id}>
+                        <SelectItem key={medio.id} value={medio.id} className="text-sm">
                           {medio.nombre}
                         </SelectItem>
                       ))}
@@ -660,12 +676,12 @@ export default function VentasPage() {
                   </Select>
                 </div>
                 <div className="flex gap-2">
-                  <Button onClick={guardarEdicion} className="flex-1">
-                    <Save className="h-4 w-4 mr-2" />
+                  <Button onClick={guardarEdicion} className="flex-1 text-sm">
+                    <Save className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                     Guardar Cambios
                   </Button>
-                  <Button variant="outline" onClick={() => setModalEditar(false)}>
-                    <X className="h-4 w-4 mr-2" />
+                  <Button variant="outline" onClick={() => setModalEditar(false)} className="text-sm bg-transparent">
+                    <X className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                     Cancelar
                   </Button>
                 </div>
@@ -716,24 +732,31 @@ function VentasContent({
     <>
       {/* Filtros */}
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5" />
+        <CardHeader className="pb-3 sm:pb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+              <Filter className="h-4 w-4 sm:h-5 sm:w-5" />
               Filtros
             </CardTitle>
             {hayFiltrosActivos && (
-              <Button variant="outline" size="sm" onClick={limpiarFiltros}>
-                <X className="h-4 w-4 mr-2" />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={limpiarFiltros}
+                className="text-xs sm:text-sm bg-transparent"
+              >
+                <X className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                 Limpiar Filtros
               </Button>
             )}
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <div>
-              <Label htmlFor="busqueda">Buscar por producto</Label>
+              <Label htmlFor="busqueda" className="text-sm">
+                Buscar por producto
+              </Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
@@ -741,21 +764,25 @@ function VentasContent({
                   placeholder="Ej: Cookie, Alfajor..."
                   value={busqueda}
                   onChange={(e) => setBusqueda(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 text-sm"
                 />
               </div>
             </div>
 
             <div>
-              <Label htmlFor="medio-pago">Filtrar por medio de pago</Label>
+              <Label htmlFor="medio-pago" className="text-sm">
+                Filtrar por medio de pago
+              </Label>
               <Select value={filtroMedioPago} onValueChange={setFiltroMedioPago}>
-                <SelectTrigger>
+                <SelectTrigger className="text-sm">
                   <SelectValue placeholder="Todos los medios" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos los medios</SelectItem>
+                  <SelectItem value="all" className="text-sm">
+                    Todos los medios
+                  </SelectItem>
                   {mediosPagoUnicos.map((medio) => (
-                    <SelectItem key={medio} value={medio}>
+                    <SelectItem key={medio} value={medio} className="text-sm">
                       {medio}
                     </SelectItem>
                   ))}
@@ -764,15 +791,19 @@ function VentasContent({
             </div>
 
             <div>
-              <Label htmlFor="fecha">Filtrar por fecha</Label>
+              <Label htmlFor="fecha" className="text-sm">
+                Filtrar por fecha
+              </Label>
               <Select value={filtroFecha} onValueChange={setFiltroFecha}>
-                <SelectTrigger>
+                <SelectTrigger className="text-sm">
                   <SelectValue placeholder="Todas las fechas" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todas las fechas</SelectItem>
+                  <SelectItem value="all" className="text-sm">
+                    Todas las fechas
+                  </SelectItem>
                   {fechasUnicas.map((fecha) => (
-                    <SelectItem key={fecha} value={fecha}>
+                    <SelectItem key={fecha} value={fecha} className="text-sm">
                       {new Date(fecha).toLocaleDateString("es-AR")}
                     </SelectItem>
                   ))}
@@ -784,11 +815,11 @@ function VentasContent({
       </Card>
 
       {/* Lista de ventas agrupadas por fecha */}
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {Object.keys(ventasAgrupadasPorFecha).length === 0 ? (
           <Card>
-            <CardContent className="p-8 text-center">
-              <p className="text-gray-500">No se encontraron ventas con los filtros aplicados</p>
+            <CardContent className="p-6 sm:p-8 text-center">
+              <p className="text-gray-500 text-sm">No se encontraron ventas con los filtros aplicados</p>
             </CardContent>
           </Card>
         ) : (
@@ -796,50 +827,52 @@ function VentasContent({
             const totalDelDia = ventasDelDia.reduce((sum, venta) => sum + venta.total, 0)
 
             return (
-              <div key={fecha} className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-gray-800 capitalize">
-                    <Calendar className="inline h-5 w-5 mr-2" />
+              <div key={fecha} className="space-y-3 sm:space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+                  <h2 className="text-lg sm:text-xl font-bold text-gray-800 capitalize">
+                    <Calendar className="inline h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                     {formatearFecha(fecha + "T00:00:00")}
                   </h2>
-                  <div className="text-right">
+                  <div className="text-left sm:text-right">
                     <p className="text-sm text-gray-600">{ventasDelDia.length} ventas</p>
                     <p className="text-lg font-bold text-green-600">${totalDelDia.toLocaleString()}</p>
                   </div>
                 </div>
 
-                <div className="grid gap-4">
+                <div className="grid gap-3 sm:gap-4">
                   {ventasDelDia.map((venta) => (
                     <Card key={venta.id} className="hover:shadow-md transition-shadow">
-                      <CardContent className="p-4">
-                        <div className="flex justify-between items-start mb-3">
+                      <CardContent className="p-3 sm:p-4">
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3 gap-2 sm:gap-0">
                           <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
                               <p className="text-sm text-gray-600">
                                 Venta #{venta.id.split("-").pop()} - {formatearHora(venta.fecha)}
                               </p>
                               {venta.usuario && (
                                 <Badge
                                   variant="outline"
-                                  className="text-xs text-[rgba(188,149,54,1)] bg-orange-100 border-orange-100"
+                                  className="text-xs text-[rgba(188,149,54,1)] bg-orange-100 border-orange-100 w-fit"
                                 >
                                   <User className="h-3 w-3 mr-1" />
                                   {venta.usuario}
                                 </Badge>
                               )}
                             </div>
-                            <Badge variant="outline" className="mt-1">
+                            <Badge variant="outline" className="mt-1 text-xs">
                               {venta.nombreMedioPago}
                             </Badge>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <div className="text-right">
-                              <p className="text-2xl font-bold text-green-600">${venta.total.toLocaleString()}</p>
+                          <div className="flex items-center justify-between sm:justify-end gap-2">
+                            <div className="text-left sm:text-right">
+                              <p className="text-xl sm:text-2xl font-bold text-green-600">
+                                ${venta.total.toLocaleString()}
+                              </p>
                               {(venta.descuentoManual > 0 || venta.descuentoPromociones > 0) && (
                                 <p className="text-xs text-gray-500">(Subtotal: ${venta.subtotal.toLocaleString()})</p>
                               )}
                             </div>
-                            <div className="flex flex-col gap-1">
+                            <div className="flex sm:flex-col gap-1">
                               <Button
                                 size="sm"
                                 variant="ghost"
@@ -858,19 +891,19 @@ function VentasContent({
                                     <Trash2 className="h-3 w-3" />
                                   </Button>
                                 </AlertDialogTrigger>
-                                <AlertDialogContent>
+                                <AlertDialogContent className="w-[95vw] max-w-md">
                                   <AlertDialogHeader>
-                                    <AlertDialogTitle>¿Eliminar venta?</AlertDialogTitle>
-                                    <AlertDialogDescription>
+                                    <AlertDialogTitle className="text-lg">¿Eliminar venta?</AlertDialogTitle>
+                                    <AlertDialogDescription className="text-sm">
                                       Esta acción no se puede deshacer. La venta será eliminada permanentemente del
                                       registro.
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                                    <AlertDialogCancel className="text-sm bg-transparent">Cancelar</AlertDialogCancel>
                                     <AlertDialogAction
                                       onClick={() => onEliminarVenta(venta.id)}
-                                      className="bg-red-600 hover:bg-red-700"
+                                      className="bg-red-600 hover:bg-red-700 text-sm"
                                     >
                                       Eliminar
                                     </AlertDialogAction>
@@ -882,7 +915,7 @@ function VentasContent({
                         </div>
 
                         {/* Items de la venta */}
-                        <div className="space-y-2 mb-3">
+                        <div className="space-y-1 sm:space-y-2 mb-3">
                           {venta.items.map((item, index) => (
                             <div key={index} className="flex justify-between items-center text-sm">
                               <span>

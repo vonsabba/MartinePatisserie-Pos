@@ -284,16 +284,17 @@ export default function ModalPromocionAvanzado({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto sm:max-w-4xl w-[95vw] sm:w-full p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle>{promocion ? "Editar Promoción" : "Nueva Promoción"}</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">{promocion ? "Editar Promoción" : "Nueva Promoción"}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
-          {/* Información básica */}
-          <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="nombre">Nombre de la promoción</Label>
+              <Label htmlFor="nombre" className="text-sm sm:text-base">
+                Nombre de la promoción
+              </Label>
               <Input
                 id="nombre"
                 value={form.nombre}
@@ -302,11 +303,13 @@ export default function ModalPromocionAvanzado({
                   limpiarError("nombre")
                 }}
                 placeholder="Ej: 2x1 en Cookies"
-                className={errores.nombre ? "border-red-500 focus:border-red-500" : ""}
+                className={cn("text-sm sm:text-base", errores.nombre ? "border-red-500 focus:border-red-500" : "")}
               />
             </div>
             <div>
-              <Label htmlFor="tipo">Tipo de promoción</Label>
+              <Label htmlFor="tipo" className="text-sm sm:text-base">
+                Tipo de promoción
+              </Label>
               <Select
                 value={form.tipo}
                 onValueChange={(value) => {
@@ -314,7 +317,9 @@ export default function ModalPromocionAvanzado({
                   limpiarError("tipo")
                 }}
               >
-                <SelectTrigger className={errores.tipo ? "border-red-500 focus:border-red-500" : ""}>
+                <SelectTrigger
+                  className={cn("text-sm sm:text-base", errores.tipo ? "border-red-500 focus:border-red-500" : "")}
+                >
                   <SelectValue placeholder="Seleccionar tipo" />
                 </SelectTrigger>
                 <SelectContent>
@@ -328,7 +333,9 @@ export default function ModalPromocionAvanzado({
           </div>
 
           <div>
-            <Label htmlFor="descripcion">Descripción</Label>
+            <Label htmlFor="descripcion" className="text-sm sm:text-base">
+              Descripción
+            </Label>
             <Input
               id="descripcion"
               value={form.descripcion}
@@ -337,25 +344,28 @@ export default function ModalPromocionAvanzado({
                 limpiarError("descripcion")
               }}
               placeholder="Descripción detallada de la promoción"
-              className={errores.descripcion ? "border-red-500 focus:border-red-500" : ""}
+              className={cn("text-sm sm:text-base", errores.descripcion ? "border-red-500 focus:border-red-500" : "")}
             />
           </div>
 
-          {/* Configuración específica según el tipo */}
           {form.tipo === "2x1" && (
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg">Configuración 2x1</CardTitle>
-                <Button size="sm" onClick={agregarProductoCombo}>
+              <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 sm:pb-6">
+                <CardTitle className="text-base sm:text-lg">Configuración 2x1</CardTitle>
+                <Button size="sm" onClick={agregarProductoCombo} className="w-full sm:w-auto">
                   <Plus className="h-4 w-4 mr-2" />
-                  Agregar Producto
+                  <span className="hidden sm:inline">Agregar Producto</span>
+                  <span className="sm:hidden">Agregar</span>
                 </Button>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3 sm:space-y-4 pt-0">
                 {(form.configuracion.productos || []).map((producto, index) => (
-                  <div key={index} className="flex gap-4 items-end p-4 border rounded-lg">
+                  <div
+                    key={index}
+                    className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-end p-3 sm:p-4 border rounded-lg"
+                  >
                     <div className="flex-1">
-                      <Label>Tipo de producto</Label>
+                      <Label className="text-sm">Tipo de producto</Label>
                       <Select
                         value={producto.id !== undefined ? "producto" : "categoria"}
                         onValueChange={(value) => {
@@ -366,7 +376,7 @@ export default function ModalPromocionAvanzado({
                           }
                         }}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="text-sm">
                           <SelectValue placeholder="Seleccionar tipo" />
                         </SelectTrigger>
                         <SelectContent>
@@ -380,12 +390,12 @@ export default function ModalPromocionAvanzado({
                       renderSelectProductoConBusqueda(index, producto)
                     ) : (
                       <div className="flex-1">
-                        <Label>Categoría</Label>
+                        <Label className="text-sm">Categoría</Label>
                         <Select
                           value={producto.categoriaId || ""}
                           onValueChange={(value) => actualizarProductoCombo(index, { categoriaId: value })}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="text-sm">
                             <SelectValue placeholder="Seleccionar categoría" />
                           </SelectTrigger>
                           <SelectContent>
@@ -399,8 +409,14 @@ export default function ModalPromocionAvanzado({
                       </div>
                     )}
 
-                    <Button size="sm" variant="ghost" onClick={() => eliminarProductoCombo(index)}>
-                      <Trash2 className="h-4 w-4" />
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => eliminarProductoCombo(index)}
+                      className="w-full sm:w-auto"
+                    >
+                      <Trash2 className="h-4 w-4 sm:mr-2" />
+                      <span className="sm:hidden ml-2">Eliminar</span>
                     </Button>
                   </div>
                 ))}
@@ -411,10 +427,10 @@ export default function ModalPromocionAvanzado({
                 )}
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                   <div className="flex items-start gap-2">
-                    <Info className="h-4 w-4 text-blue-600 mt-0.5" />
+                    <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
                     <div className="text-sm text-blue-800">
                       <p className="font-medium">¿Cómo funciona el 2x1?</p>
-                      <p>
+                      <p className="text-xs sm:text-sm">
                         Se cobrará el producto más caro y se descontará el más barato por cada par de productos que
                         coincidan.
                       </p>
@@ -427,18 +443,22 @@ export default function ModalPromocionAvanzado({
 
           {form.tipo === "combo" && (
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg">Configuración de Combos</CardTitle>
-                <Button size="sm" onClick={agregarProductoCombo}>
+              <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 sm:pb-6">
+                <CardTitle className="text-base sm:text-lg">Configuración de Combos</CardTitle>
+                <Button size="sm" onClick={agregarProductoCombo} className="w-full sm:w-auto">
                   <Plus className="h-4 w-4 mr-2" />
-                  Agregar Producto
+                  <span className="hidden sm:inline">Agregar Producto</span>
+                  <span className="sm:hidden">Agregar</span>
                 </Button>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3 sm:space-y-4 pt-0">
                 {(form.configuracion.productos || []).map((producto, index) => (
-                  <div key={index} className="flex gap-4 items-end p-4 border rounded-lg">
+                  <div
+                    key={index}
+                    className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-end p-3 sm:p-4 border rounded-lg"
+                  >
                     <div className="flex-1">
-                      <Label>Tipo de producto</Label>
+                      <Label className="text-sm">Tipo de producto</Label>
                       <Select
                         value={producto.id !== undefined ? "producto" : "categoria"}
                         onValueChange={(value) => {
@@ -449,7 +469,7 @@ export default function ModalPromocionAvanzado({
                           }
                         }}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="text-sm">
                           <SelectValue placeholder="Seleccionar tipo" />
                         </SelectTrigger>
                         <SelectContent>
@@ -463,12 +483,12 @@ export default function ModalPromocionAvanzado({
                       renderSelectProductoConBusqueda(index, producto)
                     ) : (
                       <div className="flex-1">
-                        <Label>Categoría</Label>
+                        <Label className="text-sm">Categoría</Label>
                         <Select
                           value={producto.categoriaId || ""}
                           onValueChange={(value) => actualizarProductoCombo(index, { categoriaId: value })}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="text-sm">
                             <SelectValue placeholder="Seleccionar categoría" />
                           </SelectTrigger>
                           <SelectContent>
@@ -482,8 +502,8 @@ export default function ModalPromocionAvanzado({
                       </div>
                     )}
 
-                    <div className="w-20">
-                      <Label>Cantidad</Label>
+                    <div className="w-full sm:w-20">
+                      <Label className="text-sm">Cantidad</Label>
                       <Input
                         type="number"
                         min="1"
@@ -491,11 +511,18 @@ export default function ModalPromocionAvanzado({
                         onChange={(e) =>
                           actualizarProductoCombo(index, { cantidad: Number.parseInt(e.target.value) || 1 })
                         }
+                        className="text-sm"
                       />
                     </div>
 
-                    <Button size="sm" variant="ghost" onClick={() => eliminarProductoCombo(index)}>
-                      <Trash2 className="h-4 w-4" />
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => eliminarProductoCombo(index)}
+                      className="w-full sm:w-auto"
+                    >
+                      <Trash2 className="h-4 w-4 sm:mr-2" />
+                      <span className="sm:hidden ml-2">Eliminar</span>
                     </Button>
                   </div>
                 ))}
@@ -506,7 +533,9 @@ export default function ModalPromocionAvanzado({
                 )}
 
                 <div className="mt-4">
-                  <Label htmlFor="precio-combo">Precio del combo</Label>
+                  <Label htmlFor="precio-combo" className="text-sm sm:text-base">
+                    Precio del combo
+                  </Label>
                   <Input
                     id="precio-combo"
                     type="number"
@@ -516,7 +545,10 @@ export default function ModalPromocionAvanzado({
                       limpiarError("precioCombo")
                     }}
                     placeholder="Precio especial del combo"
-                    className={errores.precioCombo ? "border-red-500 focus:border-red-500" : ""}
+                    className={cn(
+                      "text-sm sm:text-base",
+                      errores.precioCombo ? "border-red-500 focus:border-red-500" : "",
+                    )}
                   />
                 </div>
               </CardContent>
@@ -525,18 +557,22 @@ export default function ModalPromocionAvanzado({
 
           {form.tipo === "descuento-cantidad" && (
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg">Descuento por Cantidad</CardTitle>
-                <Button size="sm" onClick={agregarProductoCombo}>
+              <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 sm:pb-6">
+                <CardTitle className="text-base sm:text-lg">Descuento por Cantidad</CardTitle>
+                <Button size="sm" onClick={agregarProductoCombo} className="w-full sm:w-auto">
                   <Plus className="h-4 w-4 mr-2" />
-                  Agregar Producto
+                  <span className="hidden sm:inline">Agregar Producto</span>
+                  <span className="sm:hidden">Agregar</span>
                 </Button>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3 sm:space-y-4 pt-0">
                 {(form.configuracion.productos || []).map((producto, index) => (
-                  <div key={index} className="flex gap-4 items-end p-4 border rounded-lg">
+                  <div
+                    key={index}
+                    className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-end p-3 sm:p-4 border rounded-lg"
+                  >
                     <div className="flex-1">
-                      <Label>Tipo de producto</Label>
+                      <Label className="text-sm">Tipo de producto</Label>
                       <Select
                         value={producto.id !== undefined ? "producto" : "categoria"}
                         onValueChange={(value) => {
@@ -547,7 +583,7 @@ export default function ModalPromocionAvanzado({
                           }
                         }}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="text-sm">
                           <SelectValue placeholder="Seleccionar tipo" />
                         </SelectTrigger>
                         <SelectContent>
@@ -561,12 +597,12 @@ export default function ModalPromocionAvanzado({
                       renderSelectProductoConBusqueda(index, producto)
                     ) : (
                       <div className="flex-1">
-                        <Label>Categoría</Label>
+                        <Label className="text-sm">Categoría</Label>
                         <Select
                           value={producto.categoriaId || ""}
                           onValueChange={(value) => actualizarProductoCombo(index, { categoriaId: value })}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="text-sm">
                             <SelectValue placeholder="Seleccionar categoría" />
                           </SelectTrigger>
                           <SelectContent>
@@ -580,8 +616,14 @@ export default function ModalPromocionAvanzado({
                       </div>
                     )}
 
-                    <Button size="sm" variant="ghost" onClick={() => eliminarProductoCombo(index)}>
-                      <Trash2 className="h-4 w-4" />
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => eliminarProductoCombo(index)}
+                      className="w-full sm:w-auto"
+                    >
+                      <Trash2 className="h-4 w-4 sm:mr-2" />
+                      <span className="sm:hidden ml-2">Eliminar</span>
                     </Button>
                   </div>
                 ))}
@@ -591,9 +633,9 @@ export default function ModalPromocionAvanzado({
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-4 mt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                   <div>
-                    <Label>Cantidad mínima</Label>
+                    <Label className="text-sm sm:text-base">Cantidad mínima</Label>
                     <Input
                       type="number"
                       min="2"
@@ -603,11 +645,14 @@ export default function ModalPromocionAvanzado({
                         limpiarError("cantidadMinima")
                       }}
                       placeholder="Ej: 3"
-                      className={errores.cantidadMinima ? "border-red-500 focus:border-red-500" : ""}
+                      className={cn(
+                        "text-sm sm:text-base",
+                        errores.cantidadMinima ? "border-red-500 focus:border-red-500" : "",
+                      )}
                     />
                   </div>
                   <div>
-                    <Label>Porcentaje de descuento</Label>
+                    <Label className="text-sm sm:text-base">Porcentaje de descuento</Label>
                     <Input
                       type="number"
                       min="1"
@@ -618,7 +663,10 @@ export default function ModalPromocionAvanzado({
                         limpiarError("porcentaje")
                       }}
                       placeholder="Ej: 10"
-                      className={errores.porcentaje ? "border-red-500 focus:border-red-500" : ""}
+                      className={cn(
+                        "text-sm sm:text-base",
+                        errores.porcentaje ? "border-red-500 focus:border-red-500" : "",
+                      )}
                     />
                   </div>
                 </div>
@@ -628,12 +676,12 @@ export default function ModalPromocionAvanzado({
 
           {form.tipo === "descuento-general" && (
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Descuento General</CardTitle>
+              <CardHeader className="pb-3 sm:pb-6">
+                <CardTitle className="text-base sm:text-lg">Descuento General</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-0">
                 <div>
-                  <Label>Porcentaje de descuento</Label>
+                  <Label className="text-sm sm:text-base">Porcentaje de descuento</Label>
                   <Input
                     type="number"
                     min="1"
@@ -644,17 +692,21 @@ export default function ModalPromocionAvanzado({
                       limpiarError("porcentaje")
                     }}
                     placeholder="Ej: 15"
-                    className={errores.porcentaje ? "border-red-500 focus:border-red-500" : ""}
+                    className={cn(
+                      "text-sm sm:text-base",
+                      errores.porcentaje ? "border-red-500 focus:border-red-500" : "",
+                    )}
                   />
                 </div>
               </CardContent>
             </Card>
           )}
 
-          {/* Fechas y estado */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="fecha-inicio">Fecha de inicio</Label>
+              <Label htmlFor="fecha-inicio" className="text-sm sm:text-base">
+                Fecha de inicio
+              </Label>
               <Input
                 id="fecha-inicio"
                 type="date"
@@ -663,11 +715,13 @@ export default function ModalPromocionAvanzado({
                   setForm((prev) => ({ ...prev, fechaInicio: e.target.value }))
                   limpiarError("fechaInicio")
                 }}
-                className={errores.fechaInicio ? "border-red-500 focus:border-red-500" : ""}
+                className={cn("text-sm sm:text-base", errores.fechaInicio ? "border-red-500 focus:border-red-500" : "")}
               />
             </div>
             <div>
-              <Label htmlFor="fecha-fin">Fecha de fin</Label>
+              <Label htmlFor="fecha-fin" className="text-sm sm:text-base">
+                Fecha de fin
+              </Label>
               <Input
                 id="fecha-fin"
                 type="date"
@@ -676,24 +730,25 @@ export default function ModalPromocionAvanzado({
                   setForm((prev) => ({ ...prev, fechaFin: e.target.value }))
                   limpiarError("fechaFin")
                 }}
-                className={errores.fechaFin ? "border-red-500 focus:border-red-500" : ""}
+                className={cn("text-sm sm:text-base", errores.fechaFin ? "border-red-500 focus:border-red-500" : "")}
               />
             </div>
           </div>
 
-          {/* Opciones adicionales */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Opciones Adicionales</CardTitle>
+            <CardHeader className="pb-3 sm:pb-6">
+              <CardTitle className="text-base sm:text-lg">Opciones Adicionales</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3 sm:space-y-4 pt-0">
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="activa"
                   checked={form.activa}
                   onCheckedChange={(checked) => setForm((prev) => ({ ...prev, activa: !!checked }))}
                 />
-                <Label htmlFor="activa">Promoción activa</Label>
+                <Label htmlFor="activa" className="text-sm sm:text-base">
+                  Promoción activa
+                </Label>
               </div>
 
               <div className="flex items-center space-x-2">
@@ -702,13 +757,15 @@ export default function ModalPromocionAvanzado({
                   checked={form.configuracion.acumulable || false}
                   onCheckedChange={(checked) => actualizarConfiguracion({ acumulable: !!checked })}
                 />
-                <Label htmlFor="acumulable">Acumulable con otras promociones</Label>
+                <Label htmlFor="acumulable" className="text-sm sm:text-base">
+                  Acumulable con otras promociones
+                </Label>
               </div>
 
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
                 <div className="flex items-start gap-2">
-                  <Info className="h-4 w-4 text-amber-600 mt-0.5" />
-                  <div className="text-sm text-amber-800">
+                  <Info className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                  <div className="text-xs sm:text-sm text-amber-800">
                     <p className="font-medium">Promociones Acumulables</p>
                     <p>
                       Si está marcado, esta promoción se puede combinar con otras promociones acumulables. Si no está
@@ -720,13 +777,17 @@ export default function ModalPromocionAvanzado({
             </CardContent>
           </Card>
 
-          {/* Botones */}
-          <div className="flex gap-2">
-            <Button onClick={handleGuardar} className="flex-1">
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button onClick={handleGuardar} className="flex-1 text-sm sm:text-base">
               <Save className="h-4 w-4 mr-2" />
-              Guardar Promoción
+              <span className="hidden sm:inline">Guardar Promoción</span>
+              <span className="sm:hidden">Guardar</span>
             </Button>
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className="flex-1 sm:flex-initial text-sm sm:text-base"
+            >
               <X className="h-4 w-4 mr-2" />
               Cancelar
             </Button>

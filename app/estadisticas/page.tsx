@@ -431,19 +431,19 @@ export default function EstadisticasPage() {
 
   return (
     <RouteGuard requireAuth={true} requireAdmin={true}>
-      <div className="min-h-screen bg-gray-50 p-6">
+      <div className="min-h-screen bg-gray-50 p-4 sm:p-4">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-4">
-              <Image src="/mp-logo.svg" alt="MP Logo" width={150} height={60} className="h-12 w-auto" />
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8 gap-4">
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              <Image src="/mp-logo.svg" alt="MP Logo" width={150} height={60} className="h-8 sm:h-12 w-auto" />
               <div>
-                <h1 className="text-2xl font-bold">Estadísticas y Analytics</h1>
-                <p className="text-gray-600">{formatearPeriodo(periodoSeleccionado)}</p>
+                <h1 className="text-xl sm:text-2xl font-bold">Estadísticas y Analytics</h1>
+                <p className="text-gray-600 text-sm sm:text-cemter">{formatearPeriodo(periodoSeleccionado)}</p>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Select value={periodoSeleccionado} onValueChange={(value: any) => setPeriodoSeleccionado(value)}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-full sm:w-48">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -463,9 +463,10 @@ export default function EstadisticasPage() {
               {periodoSeleccionado === "personalizado" && (
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-48 bg-transparent">
+                    <Button variant="outline" className="w-full sm:w-48 bg-transparent">
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      Seleccionar fechas
+                      <span className="hidden sm:inline">Seleccionar fechas</span>
+                      <span className="sm:hidden">Fechas</span>
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-80">
@@ -492,21 +493,23 @@ export default function EstadisticasPage() {
               )}
 
               <Link href="/">
-                <Button variant="outline">
+                <Button variant="outline" className="w-full sm:w-auto bg-transparent">
                   <ArrowLeft className="h-4 w-4 mr-2" />
-                  Volver al POS
+                  <span className="inline">Volver al POS</span>
                 </Button>
               </Link>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
             <Card>
-              <CardContent className="p-6">
+              <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Total Facturado</p>
-                    <p className="text-3xl font-bold text-green-600">${metricas.totalFacturado.toLocaleString()}</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-green-600">
+                      ${metricas.totalFacturado.toLocaleString()}
+                    </p>
                     <div className="flex items-center mt-2">
                       {metricas.crecimiento >= 0 ? (
                         <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
@@ -519,47 +522,53 @@ export default function EstadisticasPage() {
                         {metricas.crecimiento >= 0 ? "+" : ""}
                         {metricas.crecimiento.toFixed(1)}%
                       </span>
-                      <span className="text-sm text-gray-500 ml-1">vs período anterior</span>
+                      <span className="text-xs sm:text-sm text-gray-500 ml-1">vs período anterior</span>
                     </div>
                   </div>
-                  <DollarSign className="h-8 w-8 text-green-500" />
+                  <DollarSign className="h-6 w-6 sm:h-8 sm:w-8 text-green-500" />
                 </div>
               </CardContent>
             </Card>
 
             <Card>
-              <CardContent className="p-6">
+              <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Total Ventas</p>
-                    <p className="text-3xl font-bold text-blue-600">{metricas.totalVentas}</p>
-                    <p className="text-sm text-gray-500 mt-2">{metricas.ventasPorDia.toFixed(1)} ventas/día promedio</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-blue-600">{metricas.totalVentas}</p>
+                    <p className="text-xs sm:text-sm text-gray-500 mt-2">
+                      {metricas.ventasPorDia.toFixed(1)} ventas/día promedio
+                    </p>
                   </div>
-                  <Package className="h-8 w-8 text-blue-500" />
+                  <Package className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500" />
                 </div>
               </CardContent>
             </Card>
 
             <Card>
-              <CardContent className="p-6">
+              <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Ticket Promedio</p>
-                    <p className="text-3xl font-bold text-purple-600">${metricas.promedioVenta.toLocaleString()}</p>
-                    <p className="text-sm text-gray-500 mt-2">Por venta realizada</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-purple-600">
+                      ${metricas.promedioVenta.toLocaleString()}
+                    </p>
+                    <p className="text-xs sm:text-sm text-gray-500 mt-2">Por venta realizada</p>
                   </div>
-                  <Target className="h-8 w-8 text-purple-500" />
+                  <Target className="h-6 w-6 sm:h-8 sm:w-8 text-purple-500" />
                 </div>
               </CardContent>
             </Card>
 
             <Card>
-              <CardContent className="p-6">
+              <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Descuentos Aplicados</p>
-                    <p className="text-3xl font-bold text-orange-600">${metricas.totalDescuentos.toLocaleString()}</p>
-                    <p className="text-sm text-gray-500 mt-2">
+                    <p className="text-2xl sm:text-3xl font-bold text-orange-600">
+                      ${metricas.totalDescuentos.toLocaleString()}
+                    </p>
+                    <p className="text-xs sm:text-sm text-gray-500 mt-2">
                       {(
                         (metricas.totalDescuentos / (metricas.totalFacturado + metricas.totalDescuentos)) *
                         100
@@ -567,48 +576,60 @@ export default function EstadisticasPage() {
                       % del total
                     </p>
                   </div>
-                  <Gift className="h-8 w-8 text-orange-500" />
+                  <Gift className="h-6 w-6 sm:h-8 sm:w-8 text-orange-500" />
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          <Tabs defaultValue="productos" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="productos">Productos</TabsTrigger>
-              <TabsTrigger value="temporal">Temporal</TabsTrigger>
-              <TabsTrigger value="promociones">Promociones</TabsTrigger>
-              <TabsTrigger value="pagos">Medios de Pago</TabsTrigger>
-              <TabsTrigger value="categorias">Categorías</TabsTrigger>
-            </TabsList>
+          <Tabs defaultValue="productos" className="space-y-4 sm:space-y-6">
+            <div className="overflow-x-auto">
+              <TabsList className="grid w-full grid-cols-5 min-w-[500px] sm:min-w-0">
+                <TabsTrigger value="productos" className="text-xs sm:text-sm">
+                  Productos
+                </TabsTrigger>
+                <TabsTrigger value="temporal" className="text-xs sm:text-sm">
+                  Temporal
+                </TabsTrigger>
+                <TabsTrigger value="promociones" className="text-xs sm:text-sm">
+                  Promociones
+                </TabsTrigger>
+                <TabsTrigger value="pagos" className="text-xs sm:text-sm">
+                  Medios de Pago
+                </TabsTrigger>
+                <TabsTrigger value="categorias" className="text-xs sm:text-sm">
+                  Categorías
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
-            <TabsContent value="productos" className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <TabsContent value="productos" className="space-y-4 sm:space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Award className="h-5 w-5" />
+                  <CardHeader className="pb-3 sm:pb-6">
+                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                      <Award className="h-4 w-4 sm:h-5 sm:w-5" />
                       Top 10 - Más Vendidos
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
+                  <CardContent className="pt-0">
+                    <div className="space-y-2 sm:space-y-3">
                       {analisisProductos.masVendidos.map((producto, index) => (
                         <div
                           key={producto.nombre}
-                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                          className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg"
                         >
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full font-bold text-sm">
+                          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                            <div className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 bg-blue-100 text-blue-600 rounded-full font-bold text-xs sm:text-sm flex-shrink-0">
                               {index + 1}
                             </div>
-                            <div>
-                              <p className="font-medium">{producto.nombre}</p>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium text-sm sm:text-base truncate">{producto.nombre}</p>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <p className="font-bold text-blue-600">{producto.cantidad} unidades</p>
-                            <p className="text-sm text-gray-500">${producto.ingresos.toLocaleString()}</p>
+                          <div className="text-right flex-shrink-0 ml-2">
+                            <p className="font-bold text-blue-600 text-sm sm:text-base">{producto.cantidad} unidades</p>
+                            <p className="text-xs sm:text-sm text-gray-500">${producto.ingresos.toLocaleString()}</p>
                           </div>
                         </div>
                       ))}
@@ -617,31 +638,35 @@ export default function EstadisticasPage() {
                 </Card>
 
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <DollarSign className="h-5 w-5" />
+                  <CardHeader className="pb-3 sm:pb-6">
+                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                      <DollarSign className="h-4 w-4 sm:h-5 sm:w-5" />
                       Top 10 - Más Rentables
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
+                  <CardContent className="pt-0">
+                    <div className="space-y-2 sm:space-y-3">
                       {analisisProductos.masRentables.map((producto, index) => (
                         <div
                           key={producto.nombre}
-                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                          className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg"
                         >
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center justify-center w-8 h-8 bg-green-100 text-green-600 rounded-full font-bold text-sm">
+                          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                            <div className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 bg-green-100 text-green-600 rounded-full font-bold text-xs sm:text-sm flex-shrink-0">
                               {index + 1}
                             </div>
-                            <div>
-                              <p className="font-medium">{producto.nombre}</p>
-                              <p className="text-sm text-gray-500">{producto.cantidad} unidades vendidas</p>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium text-sm sm:text-base truncate">{producto.nombre}</p>
+                              <p className="text-xs sm:text-sm text-gray-500">{producto.cantidad} unidades vendidas</p>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <p className="font-bold text-green-600">${producto.ingresos.toLocaleString()}</p>
-                            <p className="text-sm text-gray-500">${producto.promedioVenta.toLocaleString()}/venta</p>
+                          <div className="text-right flex-shrink-0 ml-2">
+                            <p className="font-bold text-green-600 text-sm sm:text-base">
+                              ${producto.ingresos.toLocaleString()}
+                            </p>
+                            <p className="text-xs sm:text-sm text-gray-500">
+                              ${producto.promedioVenta.toLocaleString()}/venta
+                            </p>
                           </div>
                         </div>
                       ))}
@@ -651,16 +676,16 @@ export default function EstadisticasPage() {
               </div>
             </TabsContent>
 
-            <TabsContent value="temporal" className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <TabsContent value="temporal" className="space-y-4 sm:space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <BarChart3 className="h-5 w-5" />
+                  <CardHeader className="pb-3 sm:pb-6">
+                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                      <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5" />
                       Ventas por Día
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="pt-0">
                     <ChartContainer
                       config={{
                         ingresos: {
@@ -668,13 +693,13 @@ export default function EstadisticasPage() {
                           color: "hsl(var(--chart-1))",
                         },
                       }}
-                      className="h-[300px]"
+                      className="h-[250px] sm:h-[300px]"
                     >
                       <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={analisisTemporal.porDia}>
                           <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="fechaFormateada" />
-                          <YAxis />
+                          <XAxis dataKey="fechaFormateada" fontSize={10} />
+                          <YAxis fontSize={10} />
                           <ChartTooltip content={<ChartTooltipContent />} />
                           <Area
                             type="monotone"
@@ -690,13 +715,13 @@ export default function EstadisticasPage() {
                 </Card>
 
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Clock className="h-5 w-5" />
+                  <CardHeader className="pb-3 sm:pb-6">
+                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                      <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
                       Ventas por Hora del Día
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="pt-0">
                     <ChartContainer
                       config={{
                         ventas: {
@@ -704,13 +729,13 @@ export default function EstadisticasPage() {
                           color: "hsl(var(--chart-2))",
                         },
                       }}
-                      className="h-[300px]"
+                      className="h-[250px] sm:h-[300px]"
                     >
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={analisisTemporal.porHora}>
                           <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="hora" />
-                          <YAxis />
+                          <XAxis dataKey="hora" fontSize={10} />
+                          <YAxis fontSize={10} />
                           <ChartTooltip content={<ChartTooltipContent />} />
                           <Bar dataKey="ventas" fill="var(--color-ventas)" />
                         </BarChart>
@@ -720,34 +745,38 @@ export default function EstadisticasPage() {
                 </Card>
 
                 <Card className="lg:col-span-2">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Calendar className="h-5 w-5" />
+                  <CardHeader className="pb-3 sm:pb-6">
+                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                      <Calendar className="h-4 w-4 sm:h-5 sm:w-5" />
                       Rendimiento por Día de la Semana
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-7 gap-4">
-                      {analisisTemporal.porDiaSemana.map((dia) => (
-                        <div key={dia.dia} className="text-center p-4 bg-gray-50 rounded-lg">
-                          <p className="font-medium text-gray-600">{dia.dia}</p>
-                          <p className="text-2xl font-bold text-blue-600 mt-2">{dia.ventas}</p>
-                          <p className="text-sm text-gray-500">ventas</p>
-                          <p className="text-lg font-semibold text-green-600 mt-1">${dia.ingresos.toLocaleString()}</p>
-                        </div>
-                      ))}
+                  <CardContent className="pt-0">
+                    <div className="overflow-x-auto">
+                      <div className="grid grid-cols-7 gap-2 sm:gap-4 min-w-[500px] sm:min-w-0">
+                        {analisisTemporal.porDiaSemana.map((dia) => (
+                          <div key={dia.dia} className="text-center p-2 sm:p-4 bg-gray-50 rounded-lg">
+                            <p className="font-medium text-gray-600 text-xs sm:text-sm">{dia.dia}</p>
+                            <p className="text-lg sm:text-2xl font-bold text-blue-600 mt-1 sm:mt-2">{dia.ventas}</p>
+                            <p className="text-xs text-gray-500">ventas</p>
+                            <p className="text-sm sm:text-lg font-semibold text-green-600 mt-1">
+                              ${dia.ingresos.toLocaleString()}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card className="lg:col-span-2">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Calendar className="h-5 w-5" />
+                  <CardHeader className="pb-3 sm:pb-6">
+                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                      <Calendar className="h-4 w-4 sm:h-5 sm:w-5" />
                       Ventas por Mes
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="pt-0">
                     <ChartContainer
                       config={{
                         ingresos: {
@@ -755,13 +784,13 @@ export default function EstadisticasPage() {
                           color: "hsl(var(--chart-3))",
                         },
                       }}
-                      className="h-[300px] w-full"
+                      className="h-[250px] sm:h-[300px] w-full"
                     >
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={analisisTemporal.porMes}>
                           <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="mesFormateado" />
-                          <YAxis />
+                          <XAxis dataKey="mesFormateado" fontSize={10} />
+                          <YAxis fontSize={10} />
                           <ChartTooltip content={<ChartTooltipContent />} />
                           <Bar dataKey="ingresos" fill="var(--color-ingresos)" />
                         </BarChart>
@@ -772,16 +801,16 @@ export default function EstadisticasPage() {
               </div>
             </TabsContent>
 
-            <TabsContent value="promociones" className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <TabsContent value="promociones" className="space-y-4 sm:space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Gift className="h-5 w-5" />
+                  <CardHeader className="pb-3 sm:pb-6">
+                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                      <Gift className="h-4 w-4 sm:h-5 sm:w-5" />
                       Promociones Más Utilizadas
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="pt-0">
                     <ChartContainer
                       config={{
                         descuentoTotal: {
@@ -789,13 +818,13 @@ export default function EstadisticasPage() {
                           color: "hsl(var(--chart-1))",
                         },
                       }}
-                      className="h-[300px]"
+                      className="h-[250px] sm:h-[300px]"
                     >
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={analisisPromociones}>
                           <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="nombre" angle={-45} textAnchor="end" height={80} fontSize={12} />
-                          <YAxis />
+                          <XAxis dataKey="nombre" angle={-45} textAnchor="end" height={80} fontSize={10} />
+                          <YAxis fontSize={10} />
                           <ChartTooltip content={<ChartTooltipContent />} />
                           <Bar dataKey="descuentoTotal" fill="var(--color-descuentoTotal)" />
                         </BarChart>
@@ -805,36 +834,44 @@ export default function EstadisticasPage() {
                 </Card>
 
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Activity className="h-5 w-5" />
+                  <CardHeader className="pb-3 sm:pb-6">
+                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                      <Activity className="h-4 w-4 sm:h-5 sm:w-5" />
                       Detalle de Promociones
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
+                  <CardContent className="pt-0">
+                    <div className="space-y-2 sm:space-y-3">
                       {analisisPromociones.map((promocion, index) => (
                         <div
                           key={promocion.nombre}
-                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                          className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg"
                         >
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center justify-center w-8 h-8 bg-orange-100 text-orange-600 rounded-full font-bold text-sm">
+                          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                            <div className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 bg-orange-100 text-orange-600 rounded-full font-bold text-xs sm:text-sm flex-shrink-0">
                               {index + 1}
                             </div>
-                            <div>
-                              <p className="font-medium">{promocion.nombre}</p>
-                              <p className="text-sm text-gray-500">{promocion.vecesAplicada} veces aplicada</p>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium text-sm sm:text-base truncate">{promocion.nombre}</p>
+                              <p className="text-xs sm:text-sm text-gray-500">
+                                {promocion.vecesAplicada} veces aplicada
+                              </p>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <p className="font-bold text-orange-600">${promocion.descuentoTotal.toLocaleString()}</p>
-                            <p className="text-sm text-gray-500">${promocion.promedioDescuento.toLocaleString()}/uso</p>
+                          <div className="text-right flex-shrink-0 ml-2">
+                            <p className="font-bold text-orange-600 text-sm sm:text-base">
+                              ${promocion.descuentoTotal.toLocaleString()}
+                            </p>
+                            <p className="text-xs sm:text-sm text-gray-500">
+                              ${promocion.promedioDescuento.toLocaleString()}/uso
+                            </p>
                           </div>
                         </div>
                       ))}
                       {analisisPromociones.length === 0 && (
-                        <p className="text-gray-500 text-center py-8">No se aplicaron promociones en este período</p>
+                        <p className="text-gray-500 text-center py-8 text-sm sm:text-base">
+                          No se aplicaron promociones en este período
+                        </p>
                       )}
                     </div>
                   </CardContent>
@@ -842,16 +879,16 @@ export default function EstadisticasPage() {
               </div>
             </TabsContent>
 
-            <TabsContent value="pagos" className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <TabsContent value="pagos" className="space-y-4 sm:space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <PieChart className="h-5 w-5" />
+                  <CardHeader className="pb-3 sm:pb-6">
+                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                      <PieChart className="h-4 w-4 sm:h-5 sm:w-5" />
                       Distribución de Medios de Pago
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="pt-0">
                     <ChartContainer
                       config={{
                         cantidad: {
@@ -859,7 +896,7 @@ export default function EstadisticasPage() {
                           color: "hsl(var(--chart-1))",
                         },
                       }}
-                      className="h-[300px]"
+                      className="h-[250px] sm:h-[300px]"
                     >
                       <ResponsiveContainer width="100%" height="100%">
                         <RechartsPieChart>
@@ -867,10 +904,11 @@ export default function EstadisticasPage() {
                             data={analisisMediosPago}
                             cx="50%"
                             cy="50%"
-                            outerRadius={80}
+                            outerRadius={60}
                             dataKey="cantidad"
                             nameKey="medio"
                             label={({ medio, porcentajeUso }) => `${medio}: ${porcentajeUso.toFixed(1)}%`}
+                            fontSize={10}
                           >
                             {analisisMediosPago.map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={COLORES_GRAFICO[index % COLORES_GRAFICO.length]} />
@@ -887,26 +925,27 @@ export default function EstadisticasPage() {
                 </Card>
 
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <CreditCard className="h-5 w-5" />
+                  <CardHeader className="pb-3 sm:pb-6">
+                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                      <CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />
                       Detalles por Medio de Pago
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
+                  <CardContent className="pt-0">
+                    <div className="space-y-2 sm:space-y-3">
                       {analisisMediosPago.map((medio, index) => (
-                        <div key={medio.medio} className="p-4 border rounded-lg">
+                        <div key={medio.medio} className="p-3 sm:p-4 border rounded-lg">
                           <div className="flex items-center justify-between mb-2">
-                            <h4 className="font-medium">{medio.medio}</h4>
+                            <h4 className="font-medium text-sm sm:text-base">{medio.medio}</h4>
                             <Badge
                               variant="outline"
                               style={{ backgroundColor: COLORES_GRAFICO[index % COLORES_GRAFICO.length] + "20" }}
+                              className="text-xs"
                             >
                               {medio.porcentajeUso.toFixed(1)}%
                             </Badge>
                           </div>
-                          <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div className="grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
                             <div>
                               <p className="text-gray-600">Ventas</p>
                               <p className="font-semibold">{medio.cantidad}</p>
@@ -932,16 +971,16 @@ export default function EstadisticasPage() {
               </div>
             </TabsContent>
 
-            <TabsContent value="categorias" className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <TabsContent value="categorias" className="space-y-4 sm:space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <BarChart3 className="h-5 w-5" />
+                  <CardHeader className="pb-3 sm:pb-6">
+                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                      <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5" />
                       Ingresos por Categoría
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="pt-0">
                     <ChartContainer
                       config={{
                         ingresos: {
@@ -949,7 +988,7 @@ export default function EstadisticasPage() {
                           color: "hsl(var(--chart-2))",
                         },
                       }}
-                      className="h-[300px]"
+                      className="h-[250px] sm:h-[300px]"
                     >
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={analisisCategorias}>
@@ -959,10 +998,10 @@ export default function EstadisticasPage() {
                             angle={-45}
                             textAnchor="end"
                             height={80}
-                            fontSize={12}
+                            fontSize={10}
                             interval={0}
                           />
-                          <YAxis />
+                          <YAxis fontSize={10} />
                           <ChartTooltip
                             content={<ChartTooltipContent />}
                             formatter={(value, name) => [`$${Number(value).toLocaleString()}`, name]}
@@ -975,36 +1014,42 @@ export default function EstadisticasPage() {
                 </Card>
 
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Activity className="h-5 w-5" />
+                  <CardHeader className="pb-3 sm:pb-6">
+                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                      <Activity className="h-4 w-4 sm:h-5 sm:w-5" />
                       Rendimiento por Categoría
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
+                  <CardContent className="pt-0">
+                    <div className="space-y-2 sm:space-y-3">
                       {analisisCategorias.map((categoria, index) => (
                         <div
                           key={categoria.categoria}
-                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                          className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg"
                         >
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center justify-center w-8 h-8 bg-purple-100 text-purple-600 rounded-full font-bold text-sm">
+                          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                            <div className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 bg-purple-100 text-purple-600 rounded-full font-bold text-xs sm:text-sm flex-shrink-0">
                               {index + 1}
                             </div>
-                            <div>
-                              <p className="font-medium">{categoria.categoria}</p>
-                              <p className="text-sm text-gray-500">{categoria.productosUnicos} productos únicos</p>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium text-sm sm:text-base truncate">{categoria.categoria}</p>
+                              <p className="text-xs sm:text-sm text-gray-500">
+                                {categoria.productosUnicos} productos únicos
+                              </p>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <p className="font-bold text-purple-600">${categoria.ingresos.toLocaleString()}</p>
-                            <p className="text-sm text-gray-500">{categoria.cantidad} unidades</p>
+                          <div className="text-right flex-shrink-0 ml-2">
+                            <p className="font-bold text-purple-600 text-sm sm:text-base">
+                              ${categoria.ingresos.toLocaleString()}
+                            </p>
+                            <p className="text-xs sm:text-sm text-gray-500">{categoria.cantidad} unidades</p>
                           </div>
                         </div>
                       ))}
                       {analisisCategorias.length === 0 && (
-                        <p className="text-gray-500 text-center py-8">No hay datos de categorías para mostrar</p>
+                        <p className="text-gray-500 text-center py-8 text-sm sm:text-base">
+                          No hay datos de categorías para mostrar
+                        </p>
                       )}
                     </div>
                   </CardContent>

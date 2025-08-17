@@ -32,8 +32,6 @@ import {
   Settings,
   Filter,
   GripVertical,
-  Power,
-  PowerOff,
   ImageIcon,
 } from "lucide-react"
 
@@ -135,9 +133,11 @@ export default function AdminPage() {
   const [ordenPromociones, setOrdenPromociones] = useState<"asc" | "desc">("asc")
   const [categoriasVisibles, setCategoriasVisibles] = useState<string[]>(Object.keys(productos))
   const [draggedCategory, setDraggedCategory] = useState<string | null>(null)
+  const [tiposPromocionVisibles, setTiposPromocionVisibles] = useState<string[]>(["todas"])
 
   // Funciones para productos
   const abrirModalProducto = (producto?: Producto, categoria?: string) => {
+    console.log("[v0] abrirModalProducto called", { producto, categoria })
     if (producto && categoria) {
       setProductoEditando(producto)
       setFormProducto({
@@ -151,6 +151,7 @@ export default function AdminPage() {
       setProductoEditando(null)
       setFormProducto({ nombre: "", precio: "", categoria: "", imagen: "", id: "" })
     }
+    console.log("[v0] Setting modalProducto to true")
     setModalProducto(true)
   }
 
@@ -549,6 +550,18 @@ export default function AdminPage() {
       })
   }
 
+  const toggleTipoPromocion = (tipo: string) => {
+    setTiposPromocionVisibles((prev) => {
+      if (tipo === "todas") {
+        return prev.includes("todas") ? [] : ["todas"]
+      } else {
+        return prev.includes(tipo)
+          ? prev.filter((t) => t !== tipo && t !== "todas")
+          : [...prev.filter((t) => t !== "todas"), tipo]
+      }
+    })
+  }
+
   // Funciones para usuarios
   const abrirModalUsuario = (usuario?: Usuario) => {
     if (usuario) {
@@ -594,57 +607,80 @@ export default function AdminPage() {
 
   return (
     <RouteGuard requireAuth={true} requireAdmin={true}>
-      <div className="min-h-screen bg-gray-50 p-4">
+      <div className="min-h-screen bg-gray-50 p-4 sm:p-4">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-4">
-              <Image src="/mp-logo.svg" alt="MP Logo" width={150} height={60} className="h-12 w-auto" />
-              <h1 className="text-2xl font-bold">Panel de Administración</h1>
+          <div className="flex flex-col md:flex-row sm:items-center md:justify-between mb-4 sm:mb-8 gap-3 sm:gap-4">
+            <div className="flex flex-col md:flex-row items-center gap-2 sm:gap-4">
+              <Image src="/mp-logo.svg" alt="MP Logo" width={150} height={60} className="h-8 sm:h-12 w-auto" />
+              <h1 className="text-lg sm:text-2xl font-bold">Panel de Administración</h1>
             </div>
             <Link href="/">
-              <Button variant="outline">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Volver al POS
+              <Button variant="outline" size="sm" className="w-full sm:w-auto bg-transparent">
+                <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                <span className="text-sm sm:text-base">Volver al POS</span>
               </Button>
             </Link>
           </div>
 
-          <Tabs defaultValue="productos" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="productos">Productos</TabsTrigger>
-              <TabsTrigger value="pagos">Medios de Pago</TabsTrigger>
-              <TabsTrigger value="descuentos">Descuentos</TabsTrigger>
-              <TabsTrigger value="promociones">Promociones</TabsTrigger>
-              <TabsTrigger value="usuarios">Usuarios</TabsTrigger>
-            </TabsList>
+          <Tabs defaultValue="productos" className="space-y-4 sm:space-y-6">
+            <div className="overflow-x-auto">
+              <TabsList className="grid w-full grid-cols-5 min-w-[500px] sm:min-w-0">
+                <TabsTrigger value="productos" className="text-xs sm:text-sm">
+                  Productos
+                </TabsTrigger>
+                <TabsTrigger value="pagos" className="text-xs sm:text-sm">
+                  Medios de Pago
+                </TabsTrigger>
+                <TabsTrigger value="descuentos" className="text-xs sm:text-sm">
+                  Descuentos
+                </TabsTrigger>
+                <TabsTrigger value="promociones" className="text-xs sm:text-sm">
+                  Promociones
+                </TabsTrigger>
+                <TabsTrigger value="usuarios" className="text-xs sm:text-sm">
+                  Usuarios
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             {/* Tab de Productos */}
             <TabsContent value="productos">
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle>Gestión de Productos</CardTitle>
+                <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 pb-3 sm:pb-6">
+                  <CardTitle className="text-lg sm:text-xl">Gestión de Productos</CardTitle>
                   <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => abrirModalCategoria()}>
-                      <Settings className="h-4 w-4 mr-2" />
-                      Categorías
+                    <Button
+                      variant="outline"
+                      onClick={() => abrirModalCategoria()}
+                      size="sm"
+                      className="flex-1 sm:flex-none text-xs sm:text-sm bg-transparent"
+                    >
+                      <Settings className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                      <span className="hidden sm:inline">Categorías</span>
+                      <span className="sm:hidden">Cat.</span>
                     </Button>
-                    <Button onClick={() => abrirModalProducto()}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Nuevo Producto
+                    <Button
+                      onClick={() => abrirModalProducto()}
+                      size="sm"
+                      className="flex-1 sm:flex-none text-xs sm:text-sm"
+                    >
+                      <Plus className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                      <span className="hidden sm:inline">Nuevo Producto</span>
+                      <span className="sm:hidden">Nuevo</span>
                     </Button>
                   </div>
                 </CardHeader>
                 <CardContent>
                   {/* Controles de búsqueda, ordenamiento y filtros */}
-                  <div className="flex gap-4 mb-6">
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mb-4 sm:mb-6">
                     <div className="flex-1 relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                       <Input
                         placeholder="Buscar productos..."
                         value={busquedaProductos}
                         onChange={(e) => setBusquedaProductos(e.target.value)}
-                        className="pl-10 pr-10"
+                        className="pl-10 pr-10 text-sm"
                       />
                       {busquedaProductos && (
                         <Button
@@ -657,41 +693,49 @@ export default function AdminPage() {
                         </Button>
                       )}
                     </div>
-                    <Button
-                      variant="outline"
-                      onClick={() => setOrdenProductos(ordenProductos === "asc" ? "desc" : "asc")}
-                    >
-                      <ArrowUpDown className="h-4 w-4 mr-2" />
-                      {ordenProductos === "asc" ? "A-Z" : "Z-A"}
-                    </Button>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline">
-                          <Filter className="h-4 w-4 mr-2" />
-                          Categorías ({categoriasVisibles.length}/{Object.keys(productos).length})
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="w-56">
-                        <DropdownMenuCheckboxItem
-                          checked={categoriasVisibles.length === Object.keys(productos).length}
-                          onCheckedChange={toggleTodasCategorias}
-                          className="font-medium"
-                        >
-                          Todas las categorías
-                        </DropdownMenuCheckboxItem>
-                        {Object.entries(productos)
-                          .sort(([, a], [, b]) => (a.orden || 0) - (b.orden || 0))
-                          .map(([key, categoria]) => (
-                            <DropdownMenuCheckboxItem
-                              key={key}
-                              checked={categoriasVisibles.includes(key)}
-                              onCheckedChange={() => toggleCategoria(key)}
-                            >
-                              {categoria.nombre} ({categoria.productos.length})
-                            </DropdownMenuCheckboxItem>
-                          ))}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => setOrdenProductos(ordenProductos === "asc" ? "desc" : "asc")}
+                        size="sm"
+                        className="text-xs sm:text-sm bg-transparent"
+                      >
+                        <ArrowUpDown className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                        <span className="hidden sm:inline">{ordenProductos === "asc" ? "A-Z" : "Z-A"}</span>
+                        <span className="sm:hidden">Sort</span>
+                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="sm" className="text-xs sm:text-sm bg-transparent">
+                            <Filter className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                            <span className="hidden sm:inline">
+                              Categorías ({categoriasVisibles.length}/{Object.keys(productos).length})
+                            </span>
+                            <span className="sm:hidden">Filter</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-56">
+                          <DropdownMenuCheckboxItem
+                            checked={categoriasVisibles.length === Object.keys(productos).length}
+                            onCheckedChange={toggleTodasCategorias}
+                            className="font-medium"
+                          >
+                            Todas las categorías
+                          </DropdownMenuCheckboxItem>
+                          {Object.entries(productos)
+                            .sort(([, a], [, b]) => (a.orden || 0) - (b.orden || 0))
+                            .map(([key, categoria]) => (
+                              <DropdownMenuCheckboxItem
+                                key={key}
+                                checked={categoriasVisibles.includes(key)}
+                                onCheckedChange={() => toggleCategoria(key)}
+                              >
+                                {categoria.nombre} ({categoria.productos.length})
+                              </DropdownMenuCheckboxItem>
+                            ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
 
                   <div className="space-y-6">
@@ -707,7 +751,7 @@ export default function AdminPage() {
                               : "No hay productos en esta categoría"}
                           </p>
                         ) : (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
+                          <div className="grid grid-cols-1 gap-3 max-h-80 sm:max-h-96 overflow-y-auto">
                             {filtrarProductos()[categoriaKey as keyof typeof filtrarProductos].productos.map(
                               (producto) => (
                                 <div
@@ -718,43 +762,44 @@ export default function AdminPage() {
                                     <div className="flex-1 min-w-0">
                                       <div className="flex items-center gap-3 mb-2">
                                         {producto.imagen ? (
-                                          <div className="w-10 h-10 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
+                                          <div className="w-12 h-12 sm:w-10 sm:h-10 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
                                             <Image
                                               src={producto.imagen || "/placeholder.svg"}
                                               alt={producto.nombre}
-                                              width={40}
-                                              height={40}
+                                              width={48}
+                                              height={48}
                                               className="w-full h-full object-cover"
                                             />
                                           </div>
                                         ) : (
-                                          <div className="w-10 h-10 rounded-md bg-gray-100 flex items-center justify-center flex-shrink-0">
+                                          <div className="w-12 h-12 sm:w-10 sm:h-10 rounded-md bg-gray-100 flex items-center justify-center flex-shrink-0">
                                             <ImageIcon className="h-5 w-5 text-gray-400" />
                                           </div>
                                         )}
                                         <div className="flex-1 min-w-0">
                                           <h3 className="font-medium text-sm truncate">{producto.nombre}</h3>
-                                          <p className="text-lg font-bold text-green-600">
+                                          <p className="text-base sm:text-lg font-bold text-green-600">
                                             ${producto.precio.toLocaleString()}
                                           </p>
                                         </div>
                                       </div>
                                     </div>
-                                    <div className="flex gap-1">
+                                    <div className="flex gap-1 sm:gap-1">
                                       <Button
                                         size="sm"
                                         variant="outline"
                                         onClick={() => abrirModalProducto(producto, categoriaKey)}
+                                        className="h-8 w-8 sm:h-auto sm:w-auto p-0 sm:p-2 bg-transparent"
                                       >
-                                        <Edit className="h-3 w-3" />
+                                        <Edit className="h-3 w-3 sm:h-3 sm:w-3" />
                                       </Button>
                                       <Button
-                                        className="bg-[rgba(188,149,54,1)]"
+                                        className="bg-[rgba(188,149,54,1)] h-8 w-8 sm:h-auto sm:w-auto p-0 sm:p-2"
                                         size="sm"
                                         variant="destructive"
                                         onClick={() => eliminarProducto(producto.id)}
                                       >
-                                        <Trash2 className="h-3 w-3" />
+                                        <Trash2 className="h-3 w-3 sm:h-3 sm:w-3" />
                                       </Button>
                                     </div>
                                   </div>
@@ -773,23 +818,23 @@ export default function AdminPage() {
             {/* Tab de Medios de Pago */}
             <TabsContent value="pagos">
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle>Medios de Pago</CardTitle>
-                  <Button onClick={() => abrirModalMedioPago()}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Nuevo Medio de Pago
+                <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 pb-3 sm:pb-6">
+                  <CardTitle className="text-lg sm:text-xl">Medios de Pago</CardTitle>
+                  <Button onClick={() => abrirModalMedioPago()} size="sm" className="text-xs sm:text-sm">
+                    <Plus className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Nuevo Medio de Pago</span>
+                    <span className="sm:hidden">Nuevo</span>
                   </Button>
                 </CardHeader>
                 <CardContent>
-                  {/* Controles de búsqueda y ordenamiento */}
-                  <div className="flex gap-4 mb-6">
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mb-4 sm:mb-6">
                     <div className="flex-1 relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                       <Input
                         placeholder="Buscar medios de pago..."
                         value={busquedaMedios}
                         onChange={(e) => setBusquedaMedios(e.target.value)}
-                        className="pl-10 pr-10"
+                        className="pl-10 pr-10 text-sm"
                       />
                       {busquedaMedios && (
                         <Button
@@ -802,27 +847,49 @@ export default function AdminPage() {
                         </Button>
                       )}
                     </div>
-                    <Button variant="outline" onClick={() => setOrdenMedios(ordenMedios === "asc" ? "desc" : "asc")}>
-                      <ArrowUpDown className="h-4 w-4 mr-2" />
-                      {ordenMedios === "asc" ? "A-Z" : "Z-A"}
+                    <Button
+                      variant="outline"
+                      onClick={() => setOrdenMedios(ordenMedios === "asc" ? "desc" : "asc")}
+                      size="sm"
+                      className="text-xs sm:text-sm bg-transparent"
+                    >
+                      <ArrowUpDown className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                      <span className="hidden sm:inline">{ordenMedios === "asc" ? "A-Z" : "Z-A"}</span>
+                      <span className="sm:hidden">Sort</span>
                     </Button>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {filtrarMediosPago().map((medio) => (
                       <div key={medio.id} className="p-4 border rounded-lg bg-white">
                         <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-medium">{medio.nombre}</h4>
+                          <h4 className="font-medium text-sm sm:text-base">{medio.nombre}</h4>
                           <div className="flex gap-1">
-                            <Button size="sm" variant="ghost" onClick={() => abrirModalMedioPago(medio)}>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => abrirModalMedioPago(medio)}
+                              className="h-8 w-8 p-0"
+                            >
                               <Edit className="h-3 w-3" />
                             </Button>
-                            <Button size="sm" variant="ghost" onClick={() => eliminarMedioPago(medio.id)}>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => eliminarMedioPago(medio.id)}
+                              className="h-8 w-8 p-0"
+                            >
                               <Trash2 className="h-3 w-3" />
                             </Button>
                           </div>
                         </div>
-                        <p className="text-sm text-gray-600">Recargo: {medio.recargo}%</p>
+                        <p className="text-xs sm:text-sm text-gray-600">
+                          {medio.recargo > 0
+                            ? `Recargo: +${medio.recargo}%`
+                            : medio.recargo < 0
+                              ? `Descuento: ${medio.recargo}%`
+                              : "Sin recargo"}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -833,23 +900,23 @@ export default function AdminPage() {
             {/* Tab de Descuentos */}
             <TabsContent value="descuentos">
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle>Descuentos Disponibles</CardTitle>
-                  <Button onClick={() => abrirModalDescuento()}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Nuevo Descuento
+                <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 pb-3 sm:pb-6">
+                  <CardTitle className="text-lg sm:text-xl">Descuentos</CardTitle>
+                  <Button onClick={() => abrirModalDescuento()} size="sm" className="text-xs sm:text-sm">
+                    <Plus className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Nuevo Descuento</span>
+                    <span className="sm:hidden">Nuevo</span>
                   </Button>
                 </CardHeader>
                 <CardContent>
-                  {/* Controles de búsqueda y ordenamiento */}
-                  <div className="flex gap-4 mb-6">
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mb-4 sm:mb-6">
                     <div className="flex-1 relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                       <Input
                         placeholder="Buscar descuentos..."
                         value={busquedaDescuentos}
                         onChange={(e) => setBusquedaDescuentos(e.target.value)}
-                        className="pl-10 pr-10"
+                        className="pl-10 pr-10 text-sm"
                       />
                       {busquedaDescuentos && (
                         <Button
@@ -865,27 +932,40 @@ export default function AdminPage() {
                     <Button
                       variant="outline"
                       onClick={() => setOrdenDescuentos(ordenDescuentos === "asc" ? "desc" : "asc")}
+                      size="sm"
+                      className="text-xs sm:text-sm bg-transparent"
                     >
-                      <ArrowUpDown className="h-4 w-4 mr-2" />
-                      {ordenDescuentos === "asc" ? "A-Z" : "Z-A"}
+                      <ArrowUpDown className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                      <span className="hidden sm:inline">{ordenDescuentos === "asc" ? "A-Z" : "Z-A"}</span>
+                      <span className="sm:hidden">Sort</span>
                     </Button>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {filtrarDescuentos().map((descuento) => (
                       <div key={descuento.id} className="p-4 border rounded-lg bg-white">
                         <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-medium">{descuento.nombre}</h4>
+                          <h4 className="font-medium text-sm sm:text-base">{descuento.nombre}</h4>
                           <div className="flex gap-1">
-                            <Button size="sm" variant="ghost" onClick={() => abrirModalDescuento(descuento)}>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => abrirModalDescuento(descuento)}
+                              className="h-8 w-8 p-0"
+                            >
                               <Edit className="h-3 w-3" />
                             </Button>
-                            <Button size="sm" variant="ghost" onClick={() => eliminarDescuento(descuento.id)}>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => eliminarDescuento(descuento.id)}
+                              className="h-8 w-8 p-0"
+                            >
                               <Trash2 className="h-3 w-3" />
                             </Button>
                           </div>
                         </div>
-                        <p className="text-sm text-gray-600">Descuento: {descuento.porcentaje}%</p>
+                        <p className="text-xs sm:text-sm text-gray-600">Descuento: {descuento.porcentaje}%</p>
                       </div>
                     ))}
                   </div>
@@ -896,23 +976,23 @@ export default function AdminPage() {
             {/* Tab de Promociones */}
             <TabsContent value="promociones">
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle>Promociones</CardTitle>
-                  <Button onClick={() => abrirModalPromocion()}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Nueva Promoción
+                <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 pb-3 sm:pb-6">
+                  <CardTitle className="text-lg sm:text-xl">Promociones</CardTitle>
+                  <Button onClick={() => abrirModalPromocion()} size="sm" className="text-xs sm:text-sm">
+                    <Plus className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Nueva Promoción</span>
+                    <span className="sm:hidden">Nueva</span>
                   </Button>
                 </CardHeader>
                 <CardContent>
-                  {/* Controles de búsqueda y ordenamiento */}
-                  <div className="flex gap-4 mb-6">
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mb-4 sm:mb-6">
                     <div className="flex-1 relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                       <Input
                         placeholder="Buscar promociones..."
                         value={busquedaPromociones}
                         onChange={(e) => setBusquedaPromociones(e.target.value)}
-                        className="pl-10 pr-10"
+                        className="pl-10 pr-10 text-sm"
                       />
                       {busquedaPromociones && (
                         <Button
@@ -925,155 +1005,124 @@ export default function AdminPage() {
                         </Button>
                       )}
                     </div>
-                    <Button
-                      variant="outline"
-                      onClick={() => setOrdenPromociones(ordenPromociones === "asc" ? "desc" : "asc")}
-                    >
-                      <ArrowUpDown className="h-4 w-4 mr-2" />
-                      {ordenPromociones === "asc" ? "A-Z" : "Z-A"}
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => setOrdenPromociones(ordenPromociones === "asc" ? "desc" : "asc")}
+                        size="sm"
+                        className="text-xs sm:text-sm bg-transparent"
+                      >
+                        <ArrowUpDown className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                        <span className="hidden sm:inline">{ordenPromociones === "asc" ? "A-Z" : "Z-A"}</span>
+                        <span className="sm:hidden">Sort</span>
+                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="sm" className="text-xs sm:text-sm bg-transparent">
+                            <Filter className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                            <span className="hidden sm:inline">Tipo</span>
+                            <span className="sm:hidden">Tipo</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuCheckboxItem
+                            checked={tiposPromocionVisibles.includes("todas")}
+                            onCheckedChange={() => toggleTipoPromocion("todas")}
+                          >
+                            Todas
+                          </DropdownMenuCheckboxItem>
+                          <DropdownMenuCheckboxItem
+                            checked={tiposPromocionVisibles.includes("2x1")}
+                            onCheckedChange={() => toggleTipoPromocion("2x1")}
+                          >
+                            2x1
+                          </DropdownMenuCheckboxItem>
+                          <DropdownMenuCheckboxItem
+                            checked={tiposPromocionVisibles.includes("combo")}
+                            onCheckedChange={() => toggleTipoPromocion("combo")}
+                          >
+                            Combo
+                          </DropdownMenuCheckboxItem>
+                          <DropdownMenuCheckboxItem
+                            checked={tiposPromocionVisibles.includes("descuento_cantidad")}
+                            onCheckedChange={() => toggleTipoPromocion("descuento_cantidad")}
+                          >
+                            Descuento por cantidad
+                          </DropdownMenuCheckboxItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
 
-                  {/* Promociones Activas */}
-                  <div className="space-y-4 mb-8">
-                    <h3 className="text-lg font-semibold text-green-700 border-b pb-2">
-                      Promociones Activas ({filtrarPromociones().filter((p) => p.activa).length})
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {filtrarPromociones()
-                        .filter((p) => p.activa)
-                        .map((promocion) => (
-                          <div key={promocion.id} className="p-4 border-2 border-green-200 rounded-lg bg-white">
-                            <div className="flex justify-between items-start mb-3">
-                              <div className="flex-1">
-                                <h4 className="font-medium text-green-800">{promocion.nombre}</h4>
-                                <p className="text-sm text-gray-600 mt-1">{promocion.descripcion}</p>
-                                <div className="flex gap-4 mt-2 text-xs text-gray-500">
-                                  <span>Desde: {new Date(promocion.fechaInicio).toLocaleDateString()}</span>
-                                  <span>Hasta: {new Date(promocion.fechaFin).toLocaleDateString()}</span>
-                                </div>
-                              </div>
-                              <div className="flex gap-1 ml-2">
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => {
-                                    setPromocionEditando(promocion)
-                                    abrirModalPromocion(promocion)
-                                  }}
-                                >
-                                  <Edit className="h-3 w-3" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => togglePromocion(promocion.id)}
-                                  className="text-orange-600 hover:text-orange-700"
-                                >
-                                  <PowerOff className="h-3 w-3" />
-                                </Button>
-                                <Button size="sm" variant="ghost" onClick={() => eliminarPromocion(promocion.id)}>
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <Badge variant="default" className="bg-green-100 text-green-800">
-                                Activa
-                              </Badge>
-                              <Badge variant="outline" className="text-xs">
-                                {promocion.tipo}
-                              </Badge>
-                            </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {filtrarPromociones().map((promocion) => (
+                      <div key={promocion.id} className="p-4 border rounded-lg bg-white">
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-sm sm:text-base truncate">{promocion.nombre}</h4>
+                            <Badge variant="outline" className="mt-1 text-xs">
+                              {promocion.tipo === "2x1" && "2x1"}
+                              {promocion.tipo === "combo" && "Combo"}
+                              {promocion.tipo === "descuento_cantidad" && "Descuento por cantidad"}
+                            </Badge>
                           </div>
-                        ))}
-                    </div>
-                    {filtrarPromociones().filter((p) => p.activa).length === 0 && (
-                      <p className="text-gray-500 text-sm italic">No hay promociones activas</p>
-                    )}
-                  </div>
-
-                  {/* Promociones Inactivas */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-500 border-b pb-2">
-                      Promociones Inactivas ({filtrarPromociones().filter((p) => !p.activa).length})
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {filtrarPromociones()
-                        .filter((p) => !p.activa)
-                        .map((promocion) => (
-                          <div key={promocion.id} className="p-4 border rounded-lg bg-gray-50 opacity-75">
-                            <div className="flex justify-between items-start mb-3">
-                              <div className="flex-1">
-                                <h4 className="font-medium text-gray-600">{promocion.nombre}</h4>
-                                <p className="text-sm text-gray-500 mt-1">{promocion.descripcion}</p>
-                                <div className="flex gap-4 mt-2 text-xs text-gray-400">
-                                  <span>Desde: {new Date(promocion.fechaInicio).toLocaleDateString()}</span>
-                                  <span>Hasta: {new Date(promocion.fechaFin).toLocaleDateString()}</span>
-                                </div>
-                              </div>
-                              <div className="flex gap-1 ml-2">
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => {
-                                    setPromocionEditando(promocion)
-                                    abrirModalPromocion(promocion)
-                                  }}
-                                >
-                                  <Edit className="h-3 w-3" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => togglePromocion(promocion.id)}
-                                  className="text-green-600 hover:text-green-700"
-                                >
-                                  <Power className="h-3 w-3" />
-                                </Button>
-                                <Button size="sm" variant="ghost" onClick={() => eliminarPromocion(promocion.id)}>
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <Badge variant="secondary" className="bg-gray-200 text-gray-600">
-                                Inactiva
-                              </Badge>
-                              <Badge variant="outline" className="text-xs text-gray-500">
-                                {promocion.tipo}
-                              </Badge>
-                            </div>
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => abrirModalPromocion(promocion)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => eliminarPromocion(promocion.id)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
                           </div>
-                        ))}
-                    </div>
-                    {filtrarPromociones().filter((p) => !p.activa).length === 0 && (
-                      <p className="text-gray-500 text-sm italic">No hay promociones inactivas</p>
-                    )}
+                        </div>
+                        <p className="text-xs sm:text-sm text-gray-600 mb-2">{promocion.descripcion}</p>
+                        <div className="flex items-center justify-between">
+                          <Badge variant={promocion.activa ? "default" : "secondary"} className="text-xs">
+                            {promocion.activa ? "Activa" : "Inactiva"}
+                          </Badge>
+                          {promocion.configuracion?.acumulable && (
+                            <Badge variant="outline" className="text-xs">
+                              Acumulable
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
             </TabsContent>
 
+            {/* Tab de Usuarios */}
             <TabsContent value="usuarios">
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle>Usuarios</CardTitle>
-                  <Button onClick={() => abrirModalUsuario()}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Nuevo Usuario
+                <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 pb-3 sm:pb-6">
+                  <CardTitle className="text-lg sm:text-xl">Usuarios</CardTitle>
+                  <Button onClick={() => abrirModalUsuario()} size="sm" className="text-xs sm:text-sm">
+                    <Plus className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Nuevo Usuario</span>
+                    <span className="sm:hidden">Nuevo</span>
                   </Button>
                 </CardHeader>
                 <CardContent>
-                  {/* Controles de búsqueda y ordenamiento */}
-                  <div className="flex gap-4 mb-6">
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mb-4 sm:mb-6">
                     <div className="flex-1 relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                       <Input
                         placeholder="Buscar usuarios..."
                         value={busquedaUsuarios}
                         onChange={(e) => setBusquedaUsuarios(e.target.value)}
-                        className="pl-10 pr-10"
+                        className="pl-10 pr-10 text-sm"
                       />
                       {busquedaUsuarios && (
                         <Button
@@ -1089,31 +1138,47 @@ export default function AdminPage() {
                     <Button
                       variant="outline"
                       onClick={() => setOrdenUsuarios(ordenUsuarios === "asc" ? "desc" : "asc")}
+                      size="sm"
+                      className="text-xs sm:text-sm bg-transparent"
                     >
-                      <ArrowUpDown className="h-4 w-4 mr-2" />
-                      {ordenUsuarios === "asc" ? "A-Z" : "Z-A"}
+                      <ArrowUpDown className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                      <span className="sm:inline">{ordenUsuarios === "asc" ? "A-Z" : "Z-A"}</span>
                     </Button>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {filtrarUsuarios().map((usuario) => (
                       <div key={usuario.id} className="p-4 border rounded-lg bg-white">
                         <div className="flex justify-between items-start mb-2">
-                          <div className="flex-1">
-                            <h4 className="font-medium">{usuario.nombre}</h4>
-                            <Badge variant={usuario.rol === "administrador" ? "default" : "secondary"} className="mt-1">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-sm sm:text-base truncate">{usuario.nombre}</h4>
+                            <Badge
+                              variant={usuario.rol === "administrador" ? "default" : "secondary"}
+                              className="mt-1 text-xs"
+                            >
                               {usuario.rol}
                             </Badge>
                           </div>
                           <div className="flex gap-1">
-                            <Button size="sm" variant="ghost" onClick={() => abrirModalUsuario(usuario)}>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => abrirModalUsuario(usuario)}
+                              className="h-8 w-8 p-0"
+                            >
                               <Edit className="h-3 w-3" />
                             </Button>
-                            <Button size="sm" variant="ghost" onClick={() => eliminarUsuario(usuario.id)}>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => eliminarUsuario(usuario.id)}
+                              className="h-8 w-8 p-0"
+                            >
                               <Trash2 className="h-3 w-3" />
                             </Button>
                           </div>
                         </div>
+                        <p className="text-xs sm:text-sm text-gray-600">ID: {usuario.id}</p>
                       </div>
                     ))}
                   </div>
@@ -1124,8 +1189,14 @@ export default function AdminPage() {
 
           {/* All modals remain the same as before */}
           {/* Modal Producto */}
-          <Dialog open={modalProducto} onOpenChange={setModalProducto}>
-            <DialogContent>
+          <Dialog
+            open={modalProducto}
+            onOpenChange={(open) => {
+              console.log("[v0] Modal onOpenChange:", open)
+              setModalProducto(open)
+            }}
+          >
+            <DialogContent className="sm:max-w-md">
               <DialogHeader>
                 <DialogTitle>{productoEditando ? "Editar Producto" : "Nuevo Producto"}</DialogTitle>
               </DialogHeader>

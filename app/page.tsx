@@ -260,40 +260,46 @@ export default function POS() {
 
   return (
     <RouteGuard requireAuth={true}>
-      <div className="min-h-screen bg-gray-50 p-4 px-10 py-10">
+      <div className="min-h-screen bg-gray-50 p-4 sm:p-4 lg:px-10 lg:py-10">
         <div className="max-w-7xl mx-auto">
           {/* Header con logo, fecha y navegación */}
-          <div className="flex flex-col items-center mb-8">
-            <div className="mb-4">
-              <Image src="/mp-logo.svg" alt="MP Logo" width={200} height={80} className="h-16 w-auto" />
+          <div className="flex flex-col items-center mb-4 sm:mb-8">
+            <div className="mb-2 sm:mb-4">
+              <Image src="/mp-logo.svg" alt="MP Logo" width={200} height={80} className="h-8 sm:h-16 w-auto" />
             </div>
-            <p className="text-sm text-gray-600 capitalize">{formatearFechaHora(fechaHora)}</p>
+            <p className="text-xs sm:text-sm text-gray-600 capitalize text-center px-2">
+              {formatearFechaHora(fechaHora)}
+            </p>
 
-            <div className="mt-4 flex items-center justify-between w-full max-w-4xl">
-              <div className="flex gap-2">
+            <div className="mt-3 sm:mt-4 w-full flex flex-col md:flex-row justify-center items-center">
+              {/* Botones de navegación - scroll horizontal en móvil */}
+              <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0  items-center justify-center mb-3 md:mb-0 md:mr-4">
                 <ProtectedLink href="/admin" requireAdmin={true}>
-                  <Button variant="outline" size="sm">
-                    Panel de Administración
+                  <Button variant="outline" size="sm" className="whitespace-nowrap text-xs sm:text-sm bg-transparent">
+                    <span className="hidden sm:inline">Panel de Administración</span>
+                    <span className="sm:hidden">Admin</span>
                   </Button>
                 </ProtectedLink>
                 <ProtectedLink href="/ventas" requireAdmin={true}>
-                  <Button variant="outline" size="sm">
-                    <BarChart3 className="h-4 w-4 mr-2" />
-                    Ver Ventas
+                  <Button variant="outline" size="sm" className="whitespace-nowrap text-xs sm:text-sm bg-transparent">
+                    <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Ver Ventas</span>
+                    <span className="sm:hidden">Ventas</span>
                   </Button>
                 </ProtectedLink>
                 <ProtectedLink href="/estadisticas" requireAdmin={true}>
-                  <Button variant="outline" size="sm">
-                    <Activity className="h-4 w-4 mr-2" />
-                    Estadísticas
+                  <Button variant="outline" size="sm" className="whitespace-nowrap text-xs sm:text-sm bg-transparent">
+                    <Activity className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Estadísticas</span>
+                    <span className="sm:hidden">Stats</span>
                   </Button>
                 </ProtectedLink>
               </div>
 
-              {/* Usuario y logout */}
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <User className="h-4 w-4" />
+              {/* Usuario y logout - centrado en móvil */}
+              <div className="flex items-center justify-center gap-2 sm:gap-3">
+                <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-gray-600">
+                  <User className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span className="font-medium">{usuario?.nombre}</span>
                   <Badge variant={isAdmin ? "default" : "secondary"} className="text-xs">
                     {usuario?.rol}
@@ -303,29 +309,30 @@ export default function POS() {
                   variant="outline"
                   size="sm"
                   onClick={handleLogout}
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 bg-transparent"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 bg-transparent text-xs sm:text-sm"
                 >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Cerrar Sesión
+                  <LogOut className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Cerrar Sesión</span>
+                  <span className="sm:hidden">Salir</span>
                 </Button>
               </div>
             </div>
           </div>
 
           {ventaConcretada && ultimaVenta && (
-            <div className="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg text-center">
+            <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg text-center text-sm sm:text-base">
               ✅ ¡Venta procesada exitosamente!
               <br />
               <span className="font-bold">Total: ${ultimaVenta.total.toLocaleString()}</span>
               {(ultimaVenta.descuentoTotal > 0 || ultimaVenta.recargo > 0) && (
-                <span className="text-sm block mt-1">
+                <span className="text-xs sm:text-sm block mt-1">
                   (Subtotal: ${ultimaVenta.subtotal.toLocaleString()}
                   {ultimaVenta.descuentoTotal > 0 && ` - Descuento: $${ultimaVenta.descuentoTotal.toLocaleString()}`}
                   {ultimaVenta.recargo > 0 && ` + Recargo: $${ultimaVenta.recargo.toLocaleString()}`})
                 </span>
               )}
               {ultimaVenta.promociones.length > 0 && (
-                <div className="mt-2 text-sm flex flex-wrap justify-center gap-1">
+                <div className="mt-2 text-xs sm:text-sm flex flex-wrap justify-center gap-1">
                   {ultimaVenta.promociones.map((promo, index) => (
                     <Badge key={index} variant="secondary" className="bg-green-200 text-green-800">
                       <Gift className="h-3 w-3 mr-1" />
@@ -337,52 +344,58 @@ export default function POS() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
             {/* Panel de Productos */}
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between pb-3 sm:pb-6">
+                <CardTitle className="text-lg sm:text-xl">
                   {categoriaActual
                     ? PRODUCTOS_POR_CATEGORIA[categoriaActual as keyof typeof PRODUCTOS_POR_CATEGORIA].nombre
                     : "Categorías"}
                 </CardTitle>
-                <div className="flex gap-2">
-                  <div className="flex items-center gap-2">
+                <div className="flex gap-1 sm:gap-2">
+                  <div className="flex items-center gap-1 sm:gap-2">
                     <Input
-                      placeholder="Buscar producto..."
+                      placeholder="Buscar..."
                       value={busquedaProducto}
                       onChange={(e) => setBusquedaProducto(e.target.value)}
-                      className="w-48"
+                      className="w-24 sm:w-48 text-xs sm:text-sm"
                     />
                     <Dialog open={modalManual} onOpenChange={setModalManual}>
                       <DialogTrigger asChild>
-                        <Button variant="outline" size="sm">
-                          <DollarSign className="h-4 w-4 mr-2" />
-                          Manual
+                        <Button variant="outline" size="sm" className="text-xs sm:text-sm bg-transparent">
+                          <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                          <span className="hidden sm:inline">Manual</span>
                         </Button>
                       </DialogTrigger>
-                      <DialogContent>
+                      <DialogContent className="w-[95vw] max-w-md">
                         <DialogHeader>
-                          <DialogTitle>Agregar Producto Manual</DialogTitle>
+                          <DialogTitle className="text-lg">Agregar Producto Manual</DialogTitle>
                         </DialogHeader>
                         <div className="space-y-4">
                           <div>
-                            <Label htmlFor="nombre-manual">Nombre del producto</Label>
+                            <Label htmlFor="nombre-manual" className="text-sm">
+                              Nombre del producto
+                            </Label>
                             <Input
                               id="nombre-manual"
                               value={productoManual.nombre}
                               onChange={(e) => setProductoManual((prev) => ({ ...prev, nombre: e.target.value }))}
                               placeholder="Ej: Producto especial"
+                              className="text-sm"
                             />
                           </div>
                           <div>
-                            <Label htmlFor="precio-manual">Precio</Label>
+                            <Label htmlFor="precio-manual" className="text-sm">
+                              Precio
+                            </Label>
                             <Input
                               id="precio-manual"
                               type="number"
                               value={productoManual.precio}
                               onChange={(e) => setProductoManual((prev) => ({ ...prev, precio: e.target.value }))}
                               placeholder="0"
+                              className="text-sm"
                             />
                           </div>
                           <Button onClick={agregarProductoManual} className="w-full">
@@ -393,9 +406,14 @@ export default function POS() {
                     </Dialog>
                   </div>
                   {categoriaActual && (
-                    <Button variant="outline" size="sm" onClick={volverACategorias}>
-                      <ArrowLeft className="h-4 w-4 mr-2" />
-                      Volver
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={volverACategorias}
+                      className="text-xs sm:text-sm bg-transparent"
+                    >
+                      <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                      <span className="hidden sm:inline">Volver</span>
                     </Button>
                   )}
                 </div>
@@ -407,11 +425,11 @@ export default function POS() {
                       Resultados de búsqueda ({productosEncontrados.length})
                     </h4>
                     {productosEncontrados.length > 0 ? (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
+                      <div className="grid grid-cols-1 gap-3 max-h-80 sm:max-h-96 overflow-y-auto">
                         {productosEncontrados.map((producto) => (
                           <div
                             key={producto.id}
-                            className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                            className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors active:bg-gray-100"
                             onClick={() => {
                               agregarProducto(producto)
                               setBusquedaProducto("") // Limpiar búsqueda después de agregar
@@ -419,73 +437,79 @@ export default function POS() {
                           >
                             <div className="flex items-center gap-3">
                               {producto.imagen ? (
-                                <div className="w-12 h-12 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
+                                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
                                   <Image
                                     src={producto.imagen || "/placeholder.svg"}
                                     alt={producto.nombre}
-                                    width={48}
-                                    height={48}
+                                    width={56}
+                                    height={56}
                                     className="w-full h-full object-cover"
                                   />
                                 </div>
                               ) : (
-                                <div className="w-12 h-12 rounded-md bg-gray-100 flex items-center justify-center flex-shrink-0">
+                                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-md bg-gray-100 flex items-center justify-center flex-shrink-0">
                                   <Package className="h-6 w-6 text-gray-400" />
                                 </div>
                               )}
                               <div className="flex-1 min-w-0">
-                                <h4 className="font-medium text-sm truncate">{producto.nombre}</h4>
-                                <p className="text-green-600 font-semibold">${producto.precio}</p>
+                                <h4 className="font-medium text-sm sm:text-base truncate">{producto.nombre}</h4>
+                                <p className="text-green-600 font-semibold text-sm sm:text-base">${producto.precio}</p>
                               </div>
                             </div>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-gray-500 text-center py-8">No se encontraron productos</p>
+                      <p className="text-gray-500 text-center py-8 text-sm">No se encontraron productos</p>
                     )}
                   </div>
                 ) : !categoriaActual ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     {Object.entries(PRODUCTOS_POR_CATEGORIA).map(([key, categoria]) => (
                       <div
                         key={key}
-                        className="p-6 border-2 rounded-lg hover:bg-blue-50 hover:border-blue-300 cursor-pointer transition-all text-center"
+                        className="p-4 sm:p-6 border-2 rounded-lg hover:bg-blue-50 hover:border-blue-300 cursor-pointer transition-all text-center active:bg-blue-100"
                         onClick={() => setCategoriaActual(key)}
                       >
-                        <h3 className="text-xl font-semibold text-[rgba(188,149,54,1)]">{categoria.nombre}</h3>
-                        <p className="text-sm text-gray-600 mt-2">{categoria.productos.length} productos</p>
+                        <h3 className="text-lg sm:text-xl font-semibold text-[rgba(188,149,54,1)]">
+                          {categoria.nombre}
+                        </h3>
+                        <p className="text-xs sm:text-sm text-gray-600 mt-1 sm:mt-2">
+                          {categoria.productos.length} productos
+                        </p>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
+                  <div className="grid grid-cols-1 gap-3 max-h-80 sm:max-h-96 overflow-y-auto">
                     {PRODUCTOS_POR_CATEGORIA[categoriaActual as keyof typeof PRODUCTOS_POR_CATEGORIA].productos.map(
                       (producto) => (
                         <div
                           key={producto.id}
-                          className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                          className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors active:bg-gray-100"
                           onClick={() => agregarProducto(producto)}
                         >
                           <div className="flex items-center gap-3">
                             {producto.imagen ? (
-                              <div className="w-12 h-12 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
+                              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
                                 <Image
                                   src={producto.imagen || "/placeholder.svg"}
                                   alt={producto.nombre}
-                                  width={48}
-                                  height={48}
+                                  width={56}
+                                  height={56}
                                   className="w-full h-full object-cover"
                                 />
                               </div>
                             ) : (
-                              <div className="w-12 h-12 rounded-md bg-gray-100 flex items-center justify-center flex-shrink-0">
+                              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-md bg-gray-100 flex items-center justify-center flex-shrink-0">
                                 <Package className="h-6 w-6 text-gray-400" />
                               </div>
                             )}
                             <div className="flex-1 min-w-0">
-                              <h4 className="font-medium text-sm truncate">{producto.nombre}</h4>
-                              <p className="text-lg font-bold text-green-600">${producto.precio.toLocaleString()}</p>
+                              <h4 className="font-medium text-sm sm:text-base truncate">{producto.nombre}</h4>
+                              <p className="text-base sm:text-lg font-bold text-green-600">
+                                ${producto.precio.toLocaleString()}
+                              </p>
                             </div>
                           </div>
                         </div>
@@ -499,41 +523,45 @@ export default function POS() {
             {/* Panel de Venta */}
             <Card>
               <CardHeader>
-                <CardTitle className="">Venta Actual</CardTitle>
+                <CardTitle className="text-lg sm:text-xl">Venta Actual</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3 sm:space-y-4">
                 {/* Items del carrito */}
-                <div className="space-y-2 max-h-64 overflow-y-auto">
+                <div className="space-y-2 max-h-48 sm:max-h-64 overflow-y-auto">
                   {carrito.length === 0 ? (
-                    <p className="text-gray-500 text-center py-8">Selecciona productos para comenzar la venta</p>
+                    <p className="text-gray-500 text-center py-6 sm:py-8 text-sm">
+                      Selecciona productos para comenzar la venta
+                    </p>
                   ) : (
                     carrito.map((item) => (
                       <div
                         key={item.producto.id}
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                        className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg"
                       >
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-sm truncate">{item.producto.nombre}</h4>
+                        <div className="flex-1 min-w-0 mr-2">
+                          <h4 className="font-medium text-xs sm:text-sm truncate">{item.producto.nombre}</h4>
                           <p className="text-xs text-gray-600">${item.producto.precio.toLocaleString()} c/u</p>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 sm:gap-2">
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => actualizarCantidad(item.producto.id, item.cantidad - 1)}
+                            className="h-7 w-7 sm:h-8 sm:w-8 p-0"
                           >
                             <Minus className="h-3 w-3" />
                           </Button>
-                          <span className="w-6 text-center font-medium text-sm">{item.cantidad}</span>
+                          <span className="w-6 text-center font-medium text-xs sm:text-sm">{item.cantidad}</span>
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => actualizarCantidad(item.producto.id, item.cantidad + 1)}
+                            className="h-7 w-7 sm:h-8 sm:w-8 p-0"
                           >
                             <Plus className="h-3 w-3" />
                           </Button>
                           <Button
-                            className="text-white bg-[rgba(188,149,54,1)]"
+                            className="text-white bg-[rgba(188,149,54,1)] h-7 w-7 sm:h-8 sm:w-8 p-0"
                             size="sm"
                             variant="destructive"
                             onClick={() => eliminarProducto(item.producto.id)}
@@ -541,7 +569,7 @@ export default function POS() {
                             <Trash2 className="h-3 w-3" />
                           </Button>
                         </div>
-                        <div className="ml-2 font-bold text-sm">
+                        <div className="ml-1 sm:ml-2 font-bold text-xs sm:text-sm min-w-0">
                           ${(item.producto.precio * item.cantidad).toLocaleString()}
                         </div>
                       </div>
@@ -551,24 +579,24 @@ export default function POS() {
 
                 {/* Promociones detectadas */}
                 {promocionesDetectadas.length > 0 && carrito.length > 0 && (
-                  <div className="border-t pt-4">
+                  <div className="border-t pt-3 sm:pt-4">
                     <div className="flex items-center gap-2 mb-2">
                       <Zap className="h-4 w-4 text-orange-500" />
-                      <Label className="text-sm font-medium">Promociones disponibles:</Label>
+                      <Label className="text-xs sm:text-sm font-medium">Promociones disponibles:</Label>
                     </div>
                     <div className="space-y-2">
                       {promocionesDetectadas.map((promo) => (
                         <div
                           key={promo.promocion.id}
-                          className={`p-3 rounded-lg border ${
+                          className={`p-2 sm:p-3 rounded-lg border ${
                             promo.aplicable ? "bg-green-50 border-green-200" : "bg-gray-50 border-gray-200"
                           }`}
                         >
                           <div className="flex items-center justify-between">
-                            <div className="flex-1">
+                            <div className="flex-1 min-w-0 mr-2">
                               <div className="flex items-center gap-2">
                                 <h4
-                                  className={`font-medium text-sm ${promo.aplicable ? "text-green-800" : "text-gray-600"}`}
+                                  className={`font-medium text-xs sm:text-sm ${promo.aplicable ? "text-green-800" : "text-gray-600"} truncate`}
                                 >
                                   {promo.promocion.nombre}
                                 </h4>
@@ -581,9 +609,9 @@ export default function POS() {
                               </div>
                               <p className="text-xs text-gray-600 mt-1">{promo.descripcionAplicacion}</p>
                             </div>
-                            <div className="text-right">
+                            <div className="text-right flex-shrink-0">
                               {promo.aplicable && (
-                                <Badge variant="default" className="bg-green-100 text-green-800">
+                                <Badge variant="default" className="bg-green-100 text-green-800 text-xs">
                                   <Gift className="h-3 w-3 mr-1" />
                                   -${promo.descuento.toLocaleString()}
                                 </Badge>
@@ -616,16 +644,16 @@ export default function POS() {
 
                 {/* Descuentos manuales */}
                 {carrito.length > 0 && (
-                  <div className="border-t pt-4">
+                  <div className="border-t pt-3 sm:pt-4">
                     <div className="flex items-center justify-between mb-2">
-                      <Label className="text-sm font-medium">Descuentos manuales:</Label>
+                      <Label className="text-xs sm:text-sm font-medium">Descuentos manuales:</Label>
                       {descuentoAplicado > 0 && (
-                        <Button size="sm" variant="ghost" onClick={quitarDescuento}>
+                        <Button size="sm" variant="ghost" onClick={quitarDescuento} className="h-6 w-6 p-0">
                           <X className="h-3 w-3" />
                         </Button>
                       )}
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-1 sm:gap-2 flex-wrap">
                       {descuentos.map((descuento) => (
                         <Button
                           key={descuento.id}
@@ -633,6 +661,7 @@ export default function POS() {
                           variant={descuentoAplicado === descuento.porcentaje / 100 ? "default" : "outline"}
                           onClick={() => aplicarDescuento(descuento.porcentaje)}
                           disabled={descuentoAplicado === descuento.porcentaje / 100}
+                          className="text-xs sm:text-sm"
                         >
                           <Percent className="h-3 w-3 mr-1" />
                           {descuento.nombre}
@@ -644,29 +673,31 @@ export default function POS() {
 
                 {/* Total */}
                 {carrito.length > 0 && (
-                  <div className="border-t pt-4 space-y-2">
+                  <div className="border-t pt-3 sm:pt-4 space-y-1 sm:space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-lg">Subtotal:</span>
-                      <span className="text-lg">${calcularSubtotal().toLocaleString()}</span>
+                      <span className="text-base sm:text-lg">Subtotal:</span>
+                      <span className="text-base sm:text-lg">${calcularSubtotal().toLocaleString()}</span>
                     </div>
 
                     {calcularDescuentoManual() > 0 && (
                       <div className="flex justify-between items-center text-blue-600">
-                        <span className="text-sm">Descuento manual ({(descuentoAplicado * 100).toFixed(0)}%):</span>
-                        <span className="text-sm">-${calcularDescuentoManual().toLocaleString()}</span>
+                        <span className="text-xs sm:text-sm">
+                          Descuento manual ({(descuentoAplicado * 100).toFixed(0)}%):
+                        </span>
+                        <span className="text-xs sm:text-sm">-${calcularDescuentoManual().toLocaleString()}</span>
                       </div>
                     )}
 
                     {descuentoTotal > 0 && (
                       <div className="flex justify-between items-center text-green-600">
-                        <span className="text-sm">
+                        <span className="text-xs sm:text-sm">
                           Promociones (
                           {promocionesAplicables.length > 1
                             ? `${promocionesAplicables.length} aplicadas`
                             : promocionesAplicables[0]?.promocion.nombre}
                           ):
                         </span>
-                        <span className="text-sm">-${descuentoTotal.toLocaleString()}</span>
+                        <span className="text-xs sm:text-sm">-${descuentoTotal.toLocaleString()}</span>
                       </div>
                     )}
 
@@ -674,16 +705,16 @@ export default function POS() {
                       <div
                         className={`flex justify-between items-center ${obtenerRecargo() > 0 ? "text-orange-600" : "text-green-600"}`}
                       >
-                        <span className="text-sm">
+                        <span className="text-xs sm:text-sm">
                           {obtenerRecargo() > 0 ? "Recargo" : "Descuento"} ({obtenerNombreMedioPago(medioPago)}):
                         </span>
-                        <span className="text-sm">
+                        <span className="text-xs sm:text-sm">
                           {obtenerRecargo() > 0 ? "+" : ""}${obtenerRecargo().toLocaleString()}
                         </span>
                       </div>
                     )}
 
-                    <div className="flex justify-between items-center text-xl font-bold border-t pt-2">
+                    <div className="flex justify-between items-center text-lg sm:text-xl font-bold border-t pt-2">
                       <span>Total:</span>
                       <span className="text-green-600">${calcularTotal().toLocaleString()}</span>
                     </div>
@@ -693,14 +724,16 @@ export default function POS() {
                 {/* Medio de pago */}
                 {carrito.length > 0 && (
                   <div className="space-y-2">
-                    <Label htmlFor="medio-pago">Medio de Pago</Label>
+                    <Label htmlFor="medio-pago" className="text-sm">
+                      Medio de Pago
+                    </Label>
                     <Select value={medioPago} onValueChange={setMedioPago}>
-                      <SelectTrigger>
+                      <SelectTrigger className="text-sm">
                         <SelectValue placeholder="Seleccionar medio de pago" />
                       </SelectTrigger>
                       <SelectContent>
                         {mediosPago.map((medio) => (
-                          <SelectItem key={medio.id} value={medio.id}>
+                          <SelectItem key={medio.id} value={medio.id} className="text-sm">
                             {medio.nombre}
                             {medio.recargo !== 0 && (
                               <span
@@ -719,10 +752,19 @@ export default function POS() {
 
                 {/* Botones de acción */}
                 <div className="flex gap-2">
-                  <Button onClick={procesarVenta} disabled={carrito.length === 0 || !medioPago} className="flex-1">
+                  <Button
+                    onClick={procesarVenta}
+                    disabled={carrito.length === 0 || !medioPago}
+                    className="flex-1 text-sm sm:text-base py-2 sm:py-3"
+                  >
                     Procesar Venta
                   </Button>
-                  <Button onClick={nuevaVenta} variant="outline" disabled={carrito.length === 0}>
+                  <Button
+                    onClick={nuevaVenta}
+                    variant="outline"
+                    disabled={carrito.length === 0}
+                    className="text-sm sm:text-base py-2 sm:py-3 bg-transparent"
+                  >
                     Limpiar
                   </Button>
                 </div>
